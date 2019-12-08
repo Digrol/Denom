@@ -1,5 +1,5 @@
 /**
- * Author:  Sergey Novochenko,  Digrol@gmail.com, denom.org
+ * Author:  Sergey Novochenko,  Digrol@gmail.com,  denom.org
  */
 
 package org.denom;
