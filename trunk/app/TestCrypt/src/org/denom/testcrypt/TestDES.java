@@ -102,7 +102,7 @@ public class TestDES
 			Binary crypt = des.encrypt( data, mode, AlignMode.BLOCK, iv );
 			des.decrypt( crypt, mode, AlignMode.BLOCK, iv );
 		} );
-		log.writeln( "Time DES SLS: " + t + " ms" );
+		log.writeln( "Time DES    : " + t + " ms" );
 
 
 		DESJce desJce = new DESJce( des.getKey() );

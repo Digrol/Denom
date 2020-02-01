@@ -82,7 +82,7 @@ public class TestDES3
 			Binary crypt = des3.encrypt( data, mode, AlignMode.BLOCK, iv );
 			des3.decrypt( crypt, mode, AlignMode.BLOCK, iv );
 		} );
-		log.writeln( "Time DES3 SLS: " + t + " ms" );
+		log.writeln( "Time DES3    : " + t + " ms" );
 
 
 		DES3Jce des3Jce = new DES3Jce( key );

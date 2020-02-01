@@ -52,9 +52,9 @@ class TestHashCommon
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * slsAlg должен вычислять такой же хеш, как алгоритм algName в стандартном крипто-провайдере.
+	 * hashAlg должен вычислять такой же хеш, как алгоритм algName в стандартном крипто-провайдере.
 	 */
-	static void crossCheckStd( IHash slsAlg, String algName, ILog log )
+	static void crossCheckStd( IHash hashAlg, String algName, ILog log )
 	{
 		log.write( "Cross check vs. '" + algName + "'... " );
 
@@ -62,7 +62,7 @@ class TestHashCommon
 		for( int i = 0; i < 1000; ++i )
 		{
 			Binary data = Bin().random( i );
-			MUST( slsAlg.calc( data ).equals(  javaHash.calc( data )  ), "Cross check failed " + algName );
+			MUST( hashAlg.calc( data ).equals(  javaHash.calc( data )  ), "Cross check failed " + algName );
 		}
 
 		log.writeln( "OK" );
@@ -73,7 +73,7 @@ class TestHashCommon
 	 * IHash.process(), обрабатывая входные данные по частям даёт тот же результат, что и IHash.calc,
 	 * а также совпадает со стандартным алгоритмом. 
 	 */
-	static void checkStream( IHash slsAlg, String algName, ILog log )
+	static void checkStream( IHash hashAlg, String algName, ILog log )
 	{
 		log.write( "Stream check '" + algName + "'... " );
 
@@ -82,13 +82,13 @@ class TestHashCommon
 		{
 			Binary testdata = Bin().random( 100 * 3 );
 
-			slsAlg.reset();
-			slsAlg.process( testdata.slice( 0, i ) );
-			slsAlg.process( testdata.slice( i, 3 ) );
-			slsAlg.process( Bin() );
-			slsAlg.process( testdata.slice( i + 3, 99 * 3 - i ) );
+			hashAlg.reset();
+			hashAlg.process( testdata.slice( 0, i ) );
+			hashAlg.process( testdata.slice( i, 3 ) );
+			hashAlg.process( Bin() );
+			hashAlg.process( testdata.slice( i + 3, 99 * 3 - i ) );
 
-			MUST( slsAlg.getHash().equals(  javaHash.calc( testdata )  ), "Stream hash check failed: " + algName );
+			MUST( hashAlg.getHash().equals(  javaHash.calc( testdata )  ), "Stream hash check failed: " + algName );
 		}
 
 		log.writeln( "OK" );
@@ -96,7 +96,7 @@ class TestHashCommon
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// Сравнение скорости вычисления хеша
-	static void compareSpeed( IHash slsAlg, String algName, ILog log )
+	static void compareSpeed( IHash hashAlg, String algName, ILog log )
 	{
 		log.writeln( "Compare hash speed for '" + algName + "', 1000 x 50KB data: " );
 
@@ -107,8 +107,8 @@ class TestHashCommon
 			JavaHash javaHash = new JavaHash( algName );
 			
 			long tMs = Ticker.measureMs( 1000, () -> javaHash.calc( data ) );
-			log.writeln( "  Std " + algName + " (1000): " + tMs + " ms" );
-			log.writeln( "    " + data.size() * 1000 / 1024 / tMs + " MB/sec" );
+			log.writeln( "    Std " + algName + " (1000): " + tMs + " ms" );
+			log.writeln( "      " + data.size() * 1000 / 1024 / tMs + " MB/sec" );
 		}
 		catch( Throwable ex )
 		{
@@ -116,9 +116,9 @@ class TestHashCommon
 		}
 		
 
-		long tMs = Ticker.measureMs( 1000, () -> slsAlg.calc( data ) );
-		log.writeln( "  SLS " + algName + " (1000): " + tMs + " ms" );
-		log.writeln( "    " + data.size() * 1000 / 1024 / tMs + " MB/sec" );
+		long tMs = Ticker.measureMs( 1000, () -> hashAlg.calc( data ) );
+		log.writeln( "  Denom " + algName + " (1000): " + tMs + " ms" );
+		log.writeln( "      " + data.size() * 1000 / 1024 / tMs + " MB/sec" );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
