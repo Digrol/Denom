@@ -137,7 +137,7 @@ public class TestAES
 			Binary crypt = aes.encrypt( data, mode, AlignMode.BLOCK, iv );
 			aes.decrypt( crypt, mode, AlignMode.BLOCK, iv );
 		} );
-		log.writeln( "Time AES SLS: " + t + " ms" );
+		log.writeln( "Time AES    : " + t + " ms" );
 
 
 		AESJce aesJce = new AESJce( key );

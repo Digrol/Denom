@@ -69,7 +69,7 @@ public class TestDES3Parts
 			Binary crypt = des.encrypt( data, mode, AlignMode.BLOCK, iv );
 			des.decrypt( crypt, mode, AlignMode.BLOCK, iv );
 		} );
-		System.out.println( "Time SLS: " + t + " ms" );
+		System.out.println( "Time    : " + t + " ms" );
 
 
 		DES3Jce desJce = new DES3Jce( key );
@@ -135,24 +135,24 @@ public class TestDES3Parts
 			crypt3 = crypt.slice( (i + 1) * BLOCK_SIZE, BLOCK_SIZE );
 			crypt4 = crypt.slice( (i + 2) * BLOCK_SIZE, crypt.size() - (i + 2) * BLOCK_SIZE );
 
-			Binary dataSls1 = Bin( crypt1.size() );
-			Binary dataSls2 = Bin( crypt2.size() );
-			Binary dataSls3 = Bin( crypt3.size() );
-			Binary dataSls4 = Bin( crypt4.size() );
+			Binary dataMy1 = Bin( crypt1.size() );
+			Binary dataMy2 = Bin( crypt2.size() );
+			Binary dataMy3 = Bin( crypt3.size() );
+			Binary dataMy4 = Bin( crypt4.size() );
 
-			des.decryptFirst( crypt1, dataSls1, cryptMode, alignMode, iv );
-			des.decryptNext( crypt2, dataSls2 );
-			des.decryptNext( crypt3, dataSls3 );
-			des.decryptLast( crypt4, dataSls4 );
+			des.decryptFirst( crypt1, dataMy1, cryptMode, alignMode, iv );
+			des.decryptNext( crypt2, dataMy2 );
+			des.decryptNext( crypt3, dataMy3 );
+			des.decryptLast( crypt4, dataMy4 );
 
-			Binary dataSls = dataSls1.add( dataSls2 ).add( dataSls3 ).add( dataSls4 );
+			Binary dataMy = dataMy1.add( dataMy2 ).add( dataMy3 ).add( dataMy4 );
 
 			// дефолтный DES
 			Binary dataJce = desJce.decrypt( cryptJce, cryptMode, alignMode, iv );
 
-			MUST( dataJce.equals( dataSls ) );
+			MUST( dataJce.equals( dataMy ) );
 			MUST( data.equals( dataJce ) );
-			MUST( data.equals( dataSls ) );
+			MUST( data.equals( dataMy ) );
 		}
 	}
 
