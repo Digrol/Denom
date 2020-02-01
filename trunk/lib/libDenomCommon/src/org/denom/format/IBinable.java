@@ -15,9 +15,8 @@ public interface IBinable
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Append serialized data to Binary array.
-	 * @return - length of appended data.
 	 */
-	int toBin( Binary res, int offset );
+	void toBin( Binary res );
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
@@ -26,7 +25,7 @@ public interface IBinable
 	default Binary toBin()
 	{
 		Binary b = new Binary();
-		toBin( b, 0 );
+		toBin( b );
 		return b;
 	}
 
@@ -42,7 +41,7 @@ public interface IBinable
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Restore data from Binary array.
-	 * @param - start from this offset.
+	 * @param offset - start from this offset.
 	 */
 	IBinable fromBin( final Binary bin, int offset );
 }
