@@ -1,6 +1,5 @@
-/**
- * Author:  Sergey Novochenko,  Digrol@gmail.com,  denom.org
- */
+// Denom.org
+// Author:  Sergey Novochenko,  Digrol@gmail.com
 
 package org.denom;
 
@@ -115,14 +114,14 @@ public class Strings
 
 		return new String( padded );
 	}
-	
+
 	// -----------------------------------------------------------------------------------------------------------------
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss.SSS" );
-	private static Date curDate = new Date();
+
 	// -----------------------------------------------------------------------------------------------------------------
 	public static String currentDateTime()
 	{
-		curDate.setTime( System.currentTimeMillis() );
+		Date curDate = new Date( System.currentTimeMillis() );
 		return DATE_FORMAT.format( curDate );
 	}
 

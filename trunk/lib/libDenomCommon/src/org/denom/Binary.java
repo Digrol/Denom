@@ -1,6 +1,5 @@
-/**
- * Author:  Sergey Novochenko,  Digrol@gmail.com,  denom.org
- */
+// Denom.org
+// Author:  Sergey Novochenko,  Digrol@gmail.com
 
 package org.denom;
 
@@ -679,6 +678,10 @@ public final class Binary implements Comparable<Binary>
 	 */
 	public boolean equals( Binary right )
 	{
+		if( right == null )
+		{
+			return false;
+		}
 		return equals( right.getDataRef(), right.size() );
 	}
 
@@ -690,6 +693,10 @@ public final class Binary implements Comparable<Binary>
 	 */
 	public boolean equals( String hexStr )
 	{
+		if( hexStr == null )
+		{
+			return false;
+		}
 		return equals( new Binary( hexStr ) );
 	}
 

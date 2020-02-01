@@ -1,6 +1,5 @@
-/**
- * Author:  Sergey Novochenko,  Digrol@gmail.com,  denom.org
- */
+// Denom.org
+// Author:  Sergey Novochenko,  Digrol@gmail.com
 
 package org.denom;
 
@@ -30,13 +29,17 @@ public class Ex extends RuntimeException
 	 */
 	public String place = "";
 
-	public Ex() {}
+	public Ex()
+	{
+		super( "" );
+	}
 
 	/**
 	 * @param errorCode - Error code.
 	 */
 	public Ex( int errorCode )
 	{
+		super( "" );
 		this.code = errorCode;
 	}
 
@@ -88,17 +91,17 @@ public class Ex extends RuntimeException
 	@Override
 	public String toString()
 	{
-		String msg = getMessage();
+		String msg = super.toString();
 		if( !place.isEmpty() )
 		{
-			msg = getMessage() + ln + "Place: "+ place;
+			msg += (ln + "Place: "+ place);
 		}
-		return (msg != null) ? msg : getClass().getName();
+		return msg;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * throw Exception {@link team.sls.Ex} with message and/or errorCode.
+	 * throw Exception {@link org.denom.Ex} with message and/or errorCode.
 	 * с заданным сообщением и/или кодом ошибки.
 	 */
 	public static void THROW( String message )
