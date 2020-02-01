@@ -254,7 +254,6 @@ public class JSONObject {
 	 * Файл при считывании препроцессируется: удаляются строки с комментариями вида:
 	 *     "  // Комментарий"
 	 * @param fileName - Имя считываемого файла.
-	 * @throws SmartupException В случае ошибок.
 	 * @return this.
 	 */
 	public JSONObject loadWithComments( String fileName )
@@ -315,7 +314,6 @@ public class JSONObject {
 	/**
 	 * Считать файл и распарсить его как JSON-объект.
 	 * @param fileName - Имя считываемого файла.
-	 * @throws SmartupException В случае ошибок.
 	 * @return this.
 	 */
 	public JSONObject load( String fileName )
