@@ -8,7 +8,6 @@ import java.security.SecureRandom;
 
 import org.denom.*;
 import org.denom.format.*;
-
 import org.denom.crypt.hash.IHash;
 
 import static org.denom.Binary.*;
@@ -376,108 +375,100 @@ public class RSA implements IBinable, Cloneable
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * Сериализовать все компоненты ключа, заданные в объекте.
-	 * Если компонент не задан, то вместо него сериализуется пустой Binary.
+	 * Serialize key components according to 'Denom Structured Data Standard'.
+	 * If key component absent, then stored empty array.
 	 * 
-	 * RSA
+	 * struct RSA
 	 * {
-	 * 		int nLen;
-	 * 		Binary p;
-	 * 		Binary q;
-	 * 		Binary dp;
-	 * 		Binary dq;
-	 * 		Binary qp;
-	 * 		Binary n;
-	 * 		Binary e;
-	 * 		Binary d;
+	 *     // Module size in bytes.
+	 *     int NLen;
+	 *
+	 *     // CRT components
+	 *     Binary p;
+	 *     Binary q;
+	 *     Binary dp;
+	 *     Binary dq;
+	 *     Binary qp;
+	 *
+	 *     // Plain components
+	 *     Binary n;
+	 *     Binary e;
+	 *     Binary d;
 	 * }
 	 */
-	public int toBin( Binary res, int offset )
+	@Override
+	public void toBin( Binary res )
 	{
-		// TODO: binable RSA
+		Binary emptyBin = Bin();
+		BinBuilder bb = new BinBuilder( res );
+		bb.append( NLen );
 
-		return 0;
+		if( isPrivateCRT() )
+		{
+			bb.append( getP() );
+			bb.append( getQ() );
+			bb.append( getDP() );
+			bb.append( getDQ() );
+			bb.append( getQP() );
+		}
+		else
+		{
+			for( int i = 0; i < 5; ++i )
+				bb.append( emptyBin );
+		}
 
-//		Binary emptyBin = Bin();
-//		BinBuilder bb = new BinBuilder( res, offset );
-//		bb.append( NLen );
-//
-//		if( isPrivateCRT() )
-//		{
-//			bb.append( getP() );
-//			bb.append( getQ() );
-//			bb.append( getDP() );
-//			bb.append( getDQ() );
-//			bb.append( getQP() );
-//		}
-//		else
-//		{
-//			for( int i = 0; i < 5; ++i )
-//				bb.append( emptyBin );
-//		}
-//
-//		if( NLen != 0 )
-//		{
-//			bb.append( getN() );
-//			bb.append( BigInt_Binary( E, 4 ) );
-//			bb.append( isPrivate() ? getD() : emptyBin );
-//		}
-//		else
-//		{
-//			for( int i = 0; i < 3; ++i )
-//				bb.append( emptyBin );
-//		}
-//
-//		return bb.getResult();
+		bb.append( isPublic() ? getN() : emptyBin );
+		bb.append( isPublic() ? BigInt_Binary( E, 4 ) : emptyBin );
+		bb.append( isPrivate() ? getD() : emptyBin );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Считать сериализованные компоненты RSA-ключа, структуру см. в toBin().
 	 */
+	@Override
 	public RSA fromBin( final Binary bin, int offset )
 	{
-		// TODO: binable RSA
+		BinParser parser = new BinParser( bin, offset );
 
-//		BinParser parser = new BinParser( bin, offset );
-//		
-//		int len = parser.getInt();
-//		MUST( (len >= 0) && (len <= 0x10000 ), "Binarization: Wrong data for parsing as RSA object" );
-//		NLen = len;
-//
-//		int halfLen = NLen >> 1;
-//
-//		Binary p = parser.getBinary( halfLen );
-//		Binary q = parser.getBinary( halfLen );
-//		Binary dp = parser.getBinary( halfLen );
-//		Binary dq = parser.getBinary( halfLen );
-//		Binary qp = parser.getBinary( halfLen );
-//		
-//		Binary n = parser.getBinary( NLen );
-//		Binary e = parser.getBinary( NLen );
-//		Binary d = parser.getBinary( NLen );
-//
-//		if( !p.empty() && !q.empty() && !dp.empty() && !dq.empty() && !qp.empty() )
-//		{
-//			setPrivateCRT( p, q, dp, dq, qp );
-//			return this;
-//		}
-//		
-//		MUST( !n.empty(), "Binarization: no RSA components" );
-//
-//		if( !d.empty() && !e.empty() )
-//		{
-//			setNED( n, e, d );
-//		}
-//		else if( !d.empty() )
-//		{
-//			setPrivate( n, d );
-//		}
-//		else
-//		{
-//			MUST( !e.empty(), "Binarization: no RSA components" );
-//			setPublic( n, e );
-//		}
+		int len = parser.getInt();
+		MUST( (len >= 0) && (len <= 0x10000 ), "Binarization: Wrong data for parsing as RSA object" );
+		NLen = len;
+
+		int halfLen = NLen >> 1;
+
+		Binary p = parser.getBinary( halfLen );
+		Binary q = parser.getBinary( halfLen );
+		Binary dp = parser.getBinary( halfLen );
+		Binary dq = parser.getBinary( halfLen );
+		Binary qp = parser.getBinary( halfLen );
+
+		Binary n = parser.getBinary( NLen );
+		Binary e = parser.getBinary( NLen );
+		Binary d = parser.getBinary( NLen );
+
+		if( !p.empty() && !q.empty() && !dp.empty() && !dq.empty() && !qp.empty() )
+		{
+			setPrivateCRT( p, q, dp, dq, qp );
+			return this;
+		}
+
+		if( !n.empty() && !d.empty() && !e.empty() )
+		{
+			setNED( n, e, d );
+			return this;
+		}
+
+		if( !n.empty() && !d.empty() )
+		{
+			setPrivate( n, d );
+			return this;
+		}
+
+		if( !n.empty() && !e.empty() )
+		{
+			setPublic( n, e );
+		}
 
 		return this;
 	}
@@ -486,6 +477,7 @@ public class RSA implements IBinable, Cloneable
 	/**
 	 * Считать сериализованные компоненты RSA-ключа, структуру см. в toBin().
 	 */
+	@Override
 	public RSA fromBin( final Binary bin )
 	{
 		return this.fromBin( bin, 0 );
