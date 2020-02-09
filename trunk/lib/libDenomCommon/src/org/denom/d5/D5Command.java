@@ -1,7 +1,7 @@
 // Denom.org
 // Author:  Sergey Novochenko,  Digrol@gmail.com
 
-package org.denom.D5;
+package org.denom.d5;
 
 import org.denom.*;
 
@@ -22,10 +22,10 @@ public class D5Command
 {
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * Command Codes
+	 * Common Command Codes
 	 */
 	public final static int ENUM_COMMANDS = 0xC0000001;
-	public final static int STOP_SERVER   = 0xC0FFFFFF;
+	public final static int EXEC_TOKEN    = 0xC0FFFFFF;
 
 	// -----------------------------------------------------------------------------------------------------------------
 
@@ -34,6 +34,9 @@ public class D5Command
 	 */
 	public int index;
 
+	/**
+	 * Command code.
+	 */
 	public int code;
 
 	/**
@@ -64,7 +67,7 @@ public class D5Command
 	/**
 	 * Parse byte array, according to D5 Command syntax.
 	 * @param bin - byte array.
-	 * @return - true if decoding success, false - wrong syntax.
+	 * @return - true if decoding was successful, false - wrong syntax.
 	 */
 	public boolean decode( final Binary bin )
 	{
