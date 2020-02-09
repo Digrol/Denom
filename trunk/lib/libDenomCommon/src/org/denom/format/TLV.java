@@ -20,7 +20,7 @@ import static org.denom.Ex.MUST;
  * 
  * TLV2, TLV4 - число задаёт размер полей Tag и Length.
  */
-public class TLV
+public class TLV implements IBinable
 {
 	public int tag;
 	public Binary value;
@@ -54,8 +54,27 @@ public class TLV
 		this.value = value;
 		this.description = description;
 	}
-	
+
 	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public void toBin( Binary res )
+	{
+		BinBuilder bb = new BinBuilder( res );
+		bb.append( tag );
+		bb.append( value );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public TLV fromBin( final Binary bin, int offset )
+	{
+		BinParser parser = new BinParser( bin, offset );
+		tag = parser.getInt();
+		value = parser.getBinary();
+		return this;
+	}
+
+	// =================================================================================================================
 	/**
 	 * Сформировать TLV4-запись в виде массива байт.
 	 * @param tag - Тег.
@@ -139,5 +158,4 @@ public class TLV
 
 		return map;
 	}
-
 }

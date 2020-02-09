@@ -134,7 +134,7 @@ public class BerTLVList
 	 * @param offset - Сколько пробелов добавлять слева.
 	 * @param dictionary - Словарь тегов. Может быть null.
 	 */
-	public String toString( int offset ) // TODO: BerTLVList: support TagDictionary , TagDictionary dictionary )
+	public String toString( int offset ) // TODO: BerTLVList: support TagDictionary
 	{
 		char[] offset_arr = new char[offset];
 		Arrays.fill( offset_arr, ' ' );

@@ -1,6 +1,8 @@
 // Denom.org
 // Author:  Sergey Novochenko,  Digrol@gmail.com
 
+package example;
+
 import org.denom.Binary;
 import org.denom.log.*;
 import org.denom.format.*;

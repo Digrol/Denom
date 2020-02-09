@@ -12,7 +12,7 @@ import static org.denom.Ex.*;
 
 // -----------------------------------------------------------------------------------------------------------------
 /**
- * Helps parse Binary array according to "Denom Structured Data Standard".
+ * Helps to parse Binary array according to 'Denom Structured Data Standard'.
  */
 public class BinParser
 {
@@ -21,8 +21,7 @@ public class BinParser
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * @param bin - Массив с сериализованными данными.
-	 * Тело bin не копируется, хранится только ссылка на время парсинга. 
+	 * @param bin - Array with serialized data. Not copied.
 	 */
 	public BinParser( final Binary bin, int offset )
 	{
@@ -34,6 +33,13 @@ public class BinParser
 	public BinParser( final Binary bin )
 	{
 		this( bin, 0 );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public void reset( final Binary bin, int offset )
+	{
+		this.bin = bin;
+		this.offset = offset;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
