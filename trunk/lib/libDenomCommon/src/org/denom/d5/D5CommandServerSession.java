@@ -23,11 +23,9 @@ public class D5CommandServerSession extends TCPServerSession
 
 	private ByteBuffer[] inBufs;
 
-	protected int commandsNumber;
-
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * For creating object instances by method newInstance.
+	 * For creating instances by method newInstance.
 	 */
 	public D5CommandServerSession( int bufSize, ILog log, D5CommandDispatcher dispatcher )
 	{
@@ -94,7 +92,6 @@ public class D5CommandServerSession extends TCPServerSession
 			headerBuf.clear();
 			dataBuf.clear();
 
-			commandsNumber++;
 			dispatcher.process( this, command );
 		}
 		catch( IOException ex )

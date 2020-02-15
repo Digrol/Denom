@@ -21,7 +21,7 @@ public class SelfTest
 		
 		for( int i = 0; i < 10; ++i )
 		{
-			Collection<Integer> cmds = client.commandEnumCommands();
+			client.commandEnumCommands();
 		}
 
 		log.writeln( "" + ticker.getDiffMs() );
@@ -30,6 +30,6 @@ public class SelfTest
 		for( int cmd : cmds )
 			log.writeln( String.format( "%8X", cmd ) );
 
-		
+		client.close();
 	}
 }

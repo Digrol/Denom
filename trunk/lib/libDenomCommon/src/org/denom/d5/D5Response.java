@@ -28,7 +28,7 @@ public class D5Response
 	 * Common Response Codes
 	 */
 	public final static int ENUM_COMMANDS = 0xA0000001;
-	public final static int EXEC_TOKEN    = 0xA0FFFFFF;
+	public final static int EXECUTE_TOKEN = 0xA0FFFFFF;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
