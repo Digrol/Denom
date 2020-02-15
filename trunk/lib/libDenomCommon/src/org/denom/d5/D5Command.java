@@ -25,7 +25,7 @@ public class D5Command
 	 * Common Command Codes
 	 */
 	public final static int ENUM_COMMANDS = 0xC0000001;
-	public final static int EXEC_TOKEN    = 0xC0FFFFFF;
+	public final static int EXECUTE_TOKEN = 0xC0FFFFFF;
 
 	// -----------------------------------------------------------------------------------------------------------------
 

@@ -8,7 +8,7 @@ import org.denom.log.LogConsole;
  */
 class BuildLibsAndroid
 {
-	static String BUILD_DATE = "2020.02.09";
+	static String BUILD_DATE = "2020.02.16";
 
 	static String TRUNK_PATH = "../..";
 	static String LIBS_PATH = "../../../libsAndroid";

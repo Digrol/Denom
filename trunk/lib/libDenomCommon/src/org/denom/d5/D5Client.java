@@ -16,7 +16,7 @@ import static org.denom.Ex.*;
 /**
  * Client, that sends commands to server according to 'D5 Protocol'.
  */
-public class D5Client
+public class D5Client implements AutoCloseable
 {
 	/**
 	 * Ограничение на размер принимаемых от сервера ответов по умолчанию.
@@ -223,9 +223,9 @@ public class D5Client
 	 * What means 'token', depends of logic level.
 	 * For example, it can stop server, if 'token' valid.
 	 */
-	public void commandExecToken( final Binary token )
+	public void commandExecuteToken( final Binary token )
 	{
-		command( D5Command.EXEC_TOKEN, token );
+		command( D5Command.EXECUTE_TOKEN, token );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
