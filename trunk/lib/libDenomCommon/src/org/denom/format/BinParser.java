@@ -36,6 +36,12 @@ public class BinParser
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
+	public int getOffset()
+	{
+		return offset;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
 	public void reset( final Binary bin, int offset )
 	{
 		this.bin = bin;
@@ -130,7 +136,7 @@ public class BinParser
 	public Binary getBinary()
 	{
 		int size = bin.getIntBE( offset );
-		MUST( size >= 0, "Binarization: Negative len while parsing Binary object" );
+		MUST( size >= 0, "Negative len while parsing Binable object" );
 
 		offset += 4;
 		Binary res = bin.slice( offset, size );
@@ -147,8 +153,8 @@ public class BinParser
 	public Binary getBinary( int maxLen )
 	{
 		int size = bin.getIntBE( offset );
-		MUST( (size >= 0), "Binarization: Negative len while parsing Binary object" );
-		MUST( size <= maxLen, "Binarization: Incorrect Binary length" );
+		MUST( (size >= 0), "Negative len while parsing Binable object" );
+		MUST( size <= maxLen, "Binable: Incorrect Binary length" );
 
 		offset += 4;
 		Binary res = bin.slice( offset, size );
@@ -190,7 +196,7 @@ public class BinParser
 	/**
 	 * Распарсить вложенный сериализованный объект, реализующий интерфейс IBinable.
 	 */
-	public IBinable getBinarizable( Class<? extends IBinable> clazz )
+	public IBinable getBinable( Class<? extends IBinable> clazz )
 	{
 		IBinable instance = null;
 
@@ -216,7 +222,7 @@ public class BinParser
 	 * Распарсить массив объектов, реализующих интерфейс IBinable.
 	 */
 	@SuppressWarnings("unchecked")
-	public IBinable[] getBinarizableArr( Class<? extends IBinable []> clazz )
+	public IBinable[] getBinableArr( Class<? extends IBinable []> clazz )
 	{
 		IBinable[] arr = null;
 		Class<?> componentType = clazz.getComponentType();
@@ -229,7 +235,7 @@ public class BinParser
 			
 			for( int i = 0; i < arr.length; ++i )
 			{
-				arr[ i ] = getBinarizable( (Class<? extends IBinable>)componentType );
+				arr[ i ] = getBinable( (Class<? extends IBinable>)componentType );
 			}
 		}
 		catch( Exception ex )
@@ -245,14 +251,14 @@ public class BinParser
 	 * Распарсить коллекцию объектов, реализующих интерфейс IBinable.
 	 */
 	@SuppressWarnings("unchecked")
-	public Collection<? extends IBinable> getBinarizableCollection( Collection<? extends IBinable> collection, 
+	public Collection<? extends IBinable> getBinableCollection( Collection<? extends IBinable> collection, 
 			Class<? extends IBinable> elemType )
 	{
 		int arrLen = bin.getIntBE( offset );
 		offset += 4;
 		
 		for( int i = 0; i < arrLen; ++i )
-			((Collection<IBinable>)collection).add( getBinarizable( elemType ) );
+			((Collection<IBinable>)collection).add( getBinable( elemType ) );
 
 		return collection;
 	}

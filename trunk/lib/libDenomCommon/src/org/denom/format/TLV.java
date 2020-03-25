@@ -57,11 +57,12 @@ public class TLV implements IBinable
 
 	// -----------------------------------------------------------------------------------------------------------------
 	@Override
-	public void toBin( Binary res )
+	public Binary toBin()
 	{
-		BinBuilder bb = new BinBuilder( res );
+		BinBuilder bb = new BinBuilder();
 		bb.append( tag );
 		bb.append( value );
+		return bb.getResult();
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

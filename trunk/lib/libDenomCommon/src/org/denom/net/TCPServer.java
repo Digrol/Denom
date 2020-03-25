@@ -36,7 +36,7 @@ public class TCPServer
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * @param sessionConstructor - на каждый новый клиентский запрос но подключение будет вызван фабричный метод
+	 * @param sessionConstructor - на каждый новый клиентский запрос на подключение будет вызван фабричный метод
 	 * sessionConstructor.nеwInstance(...) для создания экземпляра сессии.
 	 */
 	public TCPServer( ILog log, String host, int port, TCPServerSession sessionConstructor )
@@ -44,8 +44,7 @@ public class TCPServer
 		this.log = log;
 		this.sessionConstructor = sessionConstructor;
 		
-		ioExecutor = Executors.newFixedThreadPool( 1,
-				new ThreadFactoryNamed( this.getClass().getSimpleName(), Thread.NORM_PRIORITY, 0 ) );
+		ioExecutor = Executors.newFixedThreadPool( 1, new ThreadFactoryNamed( this.getClass().getSimpleName(), 8, 0 ) );
 
 		try
 		{
@@ -69,6 +68,8 @@ public class TCPServer
 	// -----------------------------------------------------------------------------------------------------------------
 	private void recreateSelector() throws IOException
 	{
+		// log.writeln( "Recreate Selector" );
+
 		Set<SelectionKey> keys = selector.keys();
 		Selector newSelector = Selector.open();
 
@@ -189,7 +190,8 @@ public class TCPServer
 				long delta = t1 - t0;
 
 				if( !wakeupCalled.getAndSet( false ) && (selected == 0) && (delta < 100) )
-				{	// Work around infamous epoll BUG
+				{
+					// Work around infamous epoll BUG
 					if( tries == 0 )
 					{
 						recreateSelector();
@@ -206,36 +208,40 @@ public class TCPServer
 					tries = 5;
 				}
 
-				for( Iterator<SelectionKey> iterator = selector.selectedKeys().iterator(); iterator.hasNext(); )
+				if( selected > 0 )
 				{
-					SelectionKey key = iterator.next();
-					iterator.remove();
-					try
+					for( Iterator<SelectionKey> iterator = selector.selectedKeys().iterator(); iterator.hasNext(); )
 					{
-						if( key.isAcceptable() )
-						{
-							// Новый клиент хочет установить соединение
-							ServerSocketChannel serverChannel = (ServerSocketChannel)key.channel();
-							acceptClient( serverChannel.accept() );
-						}
-						else if( key.isWritable() )
-						{
-							flush( (TCPServerSession)key.attachment() );
-						}
-						else if( key.isReadable() )
-						{
-							((TCPServerSession)key.attachment()).readFromSocket();
-						}
-						
-					}
-					catch( IOException ex )
-					{
-						key.cancel();
+						SelectionKey key = iterator.next();
+						iterator.remove();
 						try
 						{
-							key.channel().close();
+							if( key.isAcceptable() )
+							{
+								// Новый клиент хочет установить соединение
+								ServerSocketChannel serverChannel = (ServerSocketChannel)key.channel();
+								acceptClient( serverChannel.accept() );
+							}
+
+							if( key.isWritable() )
+							{
+								flush( (TCPServerSession)key.attachment() );
+							}
+
+							if( key.isReadable() )
+							{
+								((TCPServerSession)key.attachment()).readFromSocket();
+							}
 						}
-						catch( IOException ex2 ) {}
+						catch( IOException ex )
+						{
+							key.cancel();
+							try
+							{
+								key.channel().close();
+							}
+							catch( IOException ex2 ) {}
+						}
 					}
 				}
 

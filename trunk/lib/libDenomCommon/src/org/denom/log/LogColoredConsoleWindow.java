@@ -21,15 +21,15 @@ public class LogColoredConsoleWindow implements ILog
 	private JTextField inputTextField;
 	private String inputStr;
 
-	private int mDefaultColor = Colors.WHITE;
-	private ILog mNextLog;
+	private int defaultColor = Colors.WHITE;
+	private ILog nextLog;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	private final static int BACKGROUND_COLOR = 0xFF101010;
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private JFrame m_consoleWindow;
-	private LogColoredTextPane m_coloredTextPaneLog;
+	private JFrame consoleWindow;
+	private LogColoredTextPane coloredTextPaneLog;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
@@ -61,18 +61,18 @@ public class LogColoredConsoleWindow implements ILog
 	 */
 	public LogColoredConsoleWindow( int x, int y, int width, int height, String windowCaption )
 	{
-		m_consoleWindow = new JFrame( windowCaption );
-		m_consoleWindow.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-		m_consoleWindow.setLocation( x, y );
-		m_consoleWindow.setSize( width, height );
-		m_consoleWindow.setResizable( true );
+		consoleWindow = new JFrame( windowCaption );
+		consoleWindow.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+		consoleWindow.setLocation( x, y );
+		consoleWindow.setSize( width, height );
+		consoleWindow.setResizable( true );
 
-		m_coloredTextPaneLog = new LogColoredTextPane( BACKGROUND_COLOR, mDefaultColor, false );
-		m_consoleWindow.getContentPane().add( new JScrollPane( m_coloredTextPaneLog ) );
+		coloredTextPaneLog = new LogColoredTextPane( BACKGROUND_COLOR, defaultColor, false );
+		consoleWindow.getContentPane().add( new JScrollPane( coloredTextPaneLog ) );
 		createInputField();
-		m_consoleWindow.getContentPane().add( inputTextField, java.awt.BorderLayout.SOUTH );
+		consoleWindow.getContentPane().add( inputTextField, java.awt.BorderLayout.SOUTH );
 
-		m_consoleWindow.setVisible( true );
+		consoleWindow.setVisible( true );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -123,10 +123,10 @@ public class LogColoredConsoleWindow implements ILog
 	@Override
 	public void write( String text )
 	{
-		m_coloredTextPaneLog.write( mDefaultColor, text );
-		if( mNextLog != null )
+		coloredTextPaneLog.write( defaultColor, text );
+		if( nextLog != null )
 		{
-			mNextLog.write( text );
+			nextLog.write( text );
 		}
 	}
 
@@ -134,10 +134,10 @@ public class LogColoredConsoleWindow implements ILog
 	@Override
 	public void write( int color, String text )
 	{
-		m_coloredTextPaneLog.write( color, text );
-		if( mNextLog != null )
+		coloredTextPaneLog.write( color, text );
+		if( nextLog != null )
 		{
-			mNextLog.write( color, text );
+			nextLog.write( color, text );
 		}
 	}
 
@@ -159,14 +159,14 @@ public class LogColoredConsoleWindow implements ILog
 	@Override
 	public void setDefaultColor( int color )
 	{
-		mDefaultColor = color;
+		defaultColor = color;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	@Override
 	public ILog setNext( ILog log )
 	{
-		mNextLog = log;
+		nextLog = log;
 		return this;
 	}
 
@@ -174,8 +174,8 @@ public class LogColoredConsoleWindow implements ILog
 	@Override
 	public void close()
 	{
-		m_consoleWindow.setVisible( false );
-		m_consoleWindow.dispose();
+		consoleWindow.setVisible( false );
+		consoleWindow.dispose();
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

@@ -134,7 +134,7 @@ public class BerTLVList
 	 * @param offset - Сколько пробелов добавлять слева.
 	 * @param dictionary - Словарь тегов. Может быть null.
 	 */
-	public String toString( int offset ) // TODO: BerTLVList: support TagDictionary
+	public String toString( int offset, TagDictionary dictionary )
 	{
 		char[] offset_arr = new char[offset];
 		Arrays.fill( offset_arr, ' ' );
@@ -152,20 +152,20 @@ public class BerTLVList
 				res.append( " [" + rec.value.size() + "]" );
 			}
 
-//			if( dictionary != null )
-//			{
-//				String desc = dictionary.getDescription( rec.tag );
-//				if( !desc.isEmpty() )
-//				{
-//					res.append( " -- " + desc );
-//				}
-//			}
+			if( dictionary != null )
+			{
+				String desc = dictionary.getDescription( rec.tag );
+				if( !desc.isEmpty() )
+				{
+					res.append( " -- " + desc );
+				}
+			}
 
 			res.append( ":\n" );
 
 			if( rec.isConstructed() )
 			{
-				res.append( new BerTLVList( rec.value ).toString( offset + 4 ) ); // , dictionary ) );
+				res.append( new BerTLVList( rec.value ).toString( offset + 4, dictionary ) );
 				continue;
 			}
 
@@ -187,6 +187,16 @@ public class BerTLVList
 			res.append( '\n' );
 		}
 		return res.toString();
+	}
+
+	// ---------------------------------------------------------------------------------------------------------------------
+	/**
+	 * Представить список BER-TLV в виде многострочного текста для вывода на печать.
+	 * @param offset - Сколько пробелов добавлять слева.
+	 */
+	public String toString( int offset )
+	{
+		return toString( offset, null );
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------------

@@ -4,7 +4,7 @@
 package sendtoken;
 
 import org.denom.Binary;
-import org.denom.d5.*;
+import org.denom.net.d5.*;
 
 import static org.denom.Binary.*;
 

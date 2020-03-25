@@ -18,7 +18,7 @@ public abstract class TCPServerSession
 	 * Задаётся в конструкторе.
 	 */
 	protected final SocketChannel socket;
-	protected final TCPServer tcpProcessor;
+	protected final TCPServer tcpServer;
 
 	/**
 	 * Задаётся в TCPServer-е после создания экземпляра сессии.
@@ -32,12 +32,13 @@ public abstract class TCPServerSession
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * Для создания других инстансов вызовом метода newInstance
+	 * Creates 'Session creator'.
+	 * Sessions will be created by factory method newInstance().
 	 */
 	protected TCPServerSession()
 	{
 		this.socket = null;
-		this.tcpProcessor = null;
+		this.tcpServer = null;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -54,10 +55,10 @@ public abstract class TCPServerSession
 	public abstract TCPServerSession newInstance( TCPServer tcpServer, SocketChannel clientSocket );
 
 	// -----------------------------------------------------------------------------------------------------------------
-	protected TCPServerSession( TCPServer tcpProcessor, SocketChannel clientSocket )
+	protected TCPServerSession( TCPServer tcpServer, SocketChannel clientSocket )
 	{
 		this.socket = clientSocket;
-		this.tcpProcessor = tcpProcessor;
+		this.tcpServer = tcpServer;
 
 		try
 		{
@@ -67,6 +68,12 @@ public abstract class TCPServerSession
 		{
 			THROW( ex.toString() );
 		}
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public SocketChannel getSocket()
+	{
+		return this.socket;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -95,7 +102,7 @@ public abstract class TCPServerSession
 	public void writeToSocket( ByteBuffer buf )
 	{
 		writeQueue.offer( buf );
-		tcpProcessor.needToFlush( this );
+		tcpServer.needToFlush( this );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

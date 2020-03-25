@@ -72,14 +72,14 @@ public class JarBuilder implements AutoCloseable
 	 */
 	public void exclude( String fileName )
 	{
-		excludeList.add( fileName );
+		excludeList.add( fileName.toLowerCase() );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	public void exclude( String[] fileNames )
 	{
 		for( String fileName : fileNames )
-			excludeList.add( fileName );
+			excludeList.add( fileName.toLowerCase() );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -154,7 +154,7 @@ public class JarBuilder implements AutoCloseable
 
 		for( String excludeName : excludeList )
 		{
-			if( fileName.endsWith( excludeName ) )
+			if( fileName.toLowerCase().endsWith( excludeName ) )
 				return true;
 		}
 		return false;
