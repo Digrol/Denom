@@ -85,6 +85,17 @@ public class BinBuilder
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
+	 * Сериализовать Binary.
+	 */
+	public BinBuilder append( final Binary b, int offset, int length )
+	{
+		result.addInt( length );
+		result.add( b, offset, length );
+		return this;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
 	 * Сериализовать Binary[].
 	 */
 	public BinBuilder append( final Binary[] arr )
@@ -142,9 +153,9 @@ public class BinBuilder
 	public BinBuilder appendStringCollection( final Collection<String> collection )
 	{
 		result.addInt( collection.size() );
-		for( String b : collection )
+		for( String str : collection )
 		{
-			append( b );
+			append( str );
 		}
 		return this;
 	}

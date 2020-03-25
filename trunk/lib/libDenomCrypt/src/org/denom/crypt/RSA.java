@@ -397,10 +397,10 @@ public class RSA implements IBinable, Cloneable
 	 * }
 	 */
 	@Override
-	public void toBin( Binary res )
+	public Binary toBin()
 	{
 		Binary emptyBin = Bin();
-		BinBuilder bb = new BinBuilder( res );
+		BinBuilder bb = new BinBuilder();
 		bb.append( NLen );
 
 		if( isPrivateCRT() )
@@ -420,6 +420,7 @@ public class RSA implements IBinable, Cloneable
 		bb.append( isPublic() ? getN() : emptyBin );
 		bb.append( isPublic() ? BigInt_Binary( E, 4 ) : emptyBin );
 		bb.append( isPrivate() ? getD() : emptyBin );
+		return bb.getResult();
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

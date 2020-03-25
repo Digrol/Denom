@@ -4,26 +4,62 @@ import org.denom.build.*;
 import org.denom.log.LogConsole;
 
 /**
- * Build JAR-files with Denom libs for Java desktop platform.
+ * Build JAR-files with Denom libs for Java desktop and Android platforms.
  */
 class BuildLibs
 {
-	static String BUILD_DATE = "2020.02.16";
+	static String BUILD_DATE = "2020.03.24";
 
-	static String TRUNK_PATH = "../..";
-	static String LIBS_PATH = "../../../libs";
+	static String ROOT = "../../..";
+
+	static LogConsole log = new LogConsole();
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private static void buildLib( String projectName, String jarName )
-	{
-		LogConsole log = new LogConsole();
+	static String[] excludeAndroid = {
+			"/build",
+			"/ecj",
+			"/swing",
+			"/testrunner",
+			"LICENSE.txt",
+			"LogColoredConsoleWindow.java", "LogColoredConsoleWindow.class",
+			"LogColoredTextPane.java",      "LogColoredTextPane.class"
+	};
 
-		JarBuilder jb = new JarBuilder( log, LIBS_PATH + "/" + jarName + "-" + BUILD_DATE + ".jar" );
-		jb.addDirectory( TRUNK_PATH + "/lib/" + projectName + "/.bin" );
+	// -----------------------------------------------------------------------------------------------------------------
+	private static void buildLib( String projectName, String jarPrefix )
+	{
+		String libPath = ROOT + "/trunk/lib/" + projectName;
+		String jarName = ROOT + "/libs/" + jarPrefix + "-" + BUILD_DATE + ".jar";
+
+		// Jar
+		JarBuilder jb = new JarBuilder( log, jarName );
+		jb.exclude( "LICENSE.txt" );
+		jb.addDirectory( libPath + "/.bin" );
 		jb.close();
-		
-		jb = new JarBuilder( log, LIBS_PATH + "/" + jarName + "-" + BUILD_DATE + "-sources.jar" );
-		jb.addDirectory( TRUNK_PATH + "/lib/" + projectName + "/src" );
+
+		// Sources
+		jb = new JarBuilder( log, jarName.replace( ".jar", "-sources.jar" ) );
+		jb.exclude( "LICENSE.txt" );
+		jb.addDirectory( libPath + "/src" );
+		jb.close();
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	private static void buildLibAndroid( String projectName, String jarPrefix )
+	{
+		String libPath = ROOT + "/trunk/lib/" + projectName;
+		String jarName = ROOT + "/libsAndroid/" + jarPrefix + "-android-" + BUILD_DATE + ".jar";
+
+		// Jar
+		JarBuilder jb = new JarBuilder( log, jarName );
+		jb.exclude( excludeAndroid );
+		jb.addDirectory( libPath + "/.bin" );
+		jb.close();
+
+		// Sources
+		jb = new JarBuilder( log, jarName.replace( ".jar", "-sources.jar" ) );
+		jb.exclude( excludeAndroid );
+		jb.addDirectory( libPath + "/src" );
 		jb.close();
 	}
 
@@ -31,8 +67,9 @@ class BuildLibs
 	public static void main( String[] args ) throws Exception
 	{
 		buildLib( "libDenomCommon", "org.denom.common" );
+		buildLibAndroid( "libDenomCommon", "org.denom.common" );
+
 		buildLib( "libDenomCrypt", "org.denom.crypt" );
-		//buildLib( "libDenomRelay", "org.denom.relay" );
 	}
 
 }

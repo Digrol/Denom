@@ -3,7 +3,7 @@ import java.util.*;
 
 import org.denom.*;
 import org.denom.log.*;
-import org.denom.d5.*;
+import org.denom.net.d5.*;
 
 //import static org.denom.Binary.Bin;
 //import static org.denom.Ex.MUST;
