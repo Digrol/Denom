@@ -33,8 +33,6 @@ public class ECDSA
 	private static final Binary OID_EC_KEY = ASN1OID.toBin( "1.2.840.10045.2.1" );
 	private final Binary oidEcParams;
 
-	BigInteger r, s; // sign result
-
 	// -----------------------------------------------------------------------------------------------------------------
 	public ECDSA( ECCurve curve )
 	{
@@ -220,13 +218,15 @@ public class ECDSA
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * result in this.r and this.s.
+	 * @return r || s.
 	 */
-	void signImpl( final Binary messageHash )
+	public Binary sign( Binary messageHash )
 	{
 		MUST( D != null, "Private key for ECDSA not set" );
 
 		BigInteger e = calculateE( N, messageHash.getBytes() );
+		BigInteger r;
+		BigInteger s;
 		do
 		{
 			BigInteger k = generateK();
@@ -235,16 +235,9 @@ public class ECDSA
 			s = k.modInverse( N ).multiply( e.add( D.multiply( r ) ) ).mod( N );
 		}
 		while( r.equals( BigInteger.ZERO ) || s.equals( BigInteger.ZERO ) ); // very very rare case
-	}
+		
 
-	// -----------------------------------------------------------------------------------------------------------------
-	/**
-	 * @return r || s.
-	 */
-	public Binary sign( Binary messageHash )
-	{
-		signImpl( messageHash );
-		return Bin( ECCurve.BigInt2Bin( nSize, this.r ), ECCurve.BigInt2Bin( nSize, this.s ) );
+		return Bin( ECCurve.BigInt2Bin( nSize, r ), ECCurve.BigInt2Bin( nSize, s ) );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -253,7 +246,20 @@ public class ECDSA
 	 */
 	public Binary signStd( Binary messageHash )
 	{
-		signImpl( messageHash );
+		MUST( D != null, "Private key for ECDSA not set" );
+
+		BigInteger e = calculateE( N, messageHash.getBytes() );
+		BigInteger r;
+		BigInteger s;
+		do
+		{
+			BigInteger k = generateK();
+			ECPoint p = curve.GMul( k ).normalize();
+			r = p.getAffineXCoord().toBigInteger().mod( N );
+			s = k.modInverse( N ).multiply( e.add( D.multiply( r ) ) ).mod( N );
+		}
+		while( r.equals( BigInteger.ZERO ) || s.equals( BigInteger.ZERO ) ); // very very rare case
+
 		return Tlv( 0x30, "" + Tlv( 0x02, Bin( r.toByteArray() ) ) + Tlv( 0x02, Bin( s.toByteArray() ) ) );
 	}
 
@@ -261,7 +267,7 @@ public class ECDSA
 	/**
 	 * this.r and this.s must be set.
 	 */
-	private boolean verifyImpl( Binary hash )
+	private boolean verifyImpl( Binary hash, BigInteger r, BigInteger s )
 	{
 		checkPublic();
 
@@ -301,18 +307,18 @@ public class ECDSA
 	 */
 	public boolean verify( Binary hash, Binary sign )
 	{
-		r = new BigInteger( 1, sign.first( sign.size() / 2 ).getBytes() );
-		s = new BigInteger( 1, sign.last( sign.size() / 2 ).getBytes() );
-		return verifyImpl( hash );
+		BigInteger r = new BigInteger( 1, sign.first( sign.size() / 2 ).getBytes() );
+		BigInteger s = new BigInteger( 1, sign.last( sign.size() / 2 ).getBytes() );
+		return verifyImpl( hash, r, s );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	public boolean verifyStd( Binary hash, Binary sign )
 	{
 		BerTLV tlv = new BerTLV( sign );
-		r = new BigInteger( tlv.find( 0x02, 1 ).value.getBytes() );
-		s = new BigInteger( tlv.find( 0x02, 2 ).value.getBytes() );
-		return verifyImpl( hash );
+		BigInteger r = new BigInteger( tlv.find( 0x02, 1 ).value.getBytes() );
+		BigInteger s = new BigInteger( tlv.find( 0x02, 2 ).value.getBytes() );
+		return verifyImpl( hash, r, s );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

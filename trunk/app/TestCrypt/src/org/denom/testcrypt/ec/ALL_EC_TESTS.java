@@ -25,5 +25,7 @@ class ALL_EC_TESTS
 		new TestX448( log );
 		new TestEd25519( log );
 		new TestEd448( log );
+
+		log.writeln( "All done" );
 	}
 }
