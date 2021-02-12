@@ -23,8 +23,6 @@ public class ECGOST
 	private BigInteger fixedK = null; // for test only
 	private SecureRandom random = new SecureRandom();
 
-	BigInteger r, s; // sign result
-
 	// -----------------------------------------------------------------------------------------------------------------
 	public ECGOST( ECCurve curve )
 	{
@@ -137,11 +135,17 @@ public class ECGOST
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private void signImpl( Binary hash )
+	/**
+	 * @param hash - GOST3411 hash.
+	 * @return r || s.
+	 */
+	public Binary sign( Binary hash )
 	{
 		MUST( privateD != null, "Private key for ECGOST not set" );
 
 		BigInteger e = new BigInteger( 1, hash.getBytes() );
+		BigInteger r;
+		BigInteger s;
 		do
 		{
 			BigInteger k = generateK();
@@ -150,24 +154,20 @@ public class ECGOST
 			s = (k.multiply( e )).add( privateD.multiply( r ) ).mod( N );
 		}
 		while( r.equals( BigInteger.ZERO ) || s.equals( BigInteger.ZERO ) ); // very very rare case
+
+		return Bin( ECCurve.BigInt2Bin( NSize, r ), ECCurve.BigInt2Bin( NSize, s ) );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * @param hash - GOST3411 hash.
-	 * @return r || s.
+	 * @param sign - r || s.
 	 */
-	public Binary sign( Binary hash )
-	{
-		signImpl( hash );
-		return Bin( ECCurve.BigInt2Bin( NSize, this.r ), ECCurve.BigInt2Bin( NSize, this.s ) );
-	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	private boolean verifyImpl( Binary hash )
+	public boolean verify( Binary hash, Binary sign )
 	{
 		checkPublic();
 
+		BigInteger r = new BigInteger( 1, sign.first( sign.size() / 2 ).getBytes() );
+		BigInteger s = new BigInteger( 1, sign.last( sign.size() / 2 ).getBytes() );
 		BigInteger e = new BigInteger( 1, hash.getBytes() );
 
 		// r in the range [1,n-1]
@@ -196,16 +196,5 @@ public class ECGOST
 		BigInteger R = point.getAffineXCoord().toBigInteger().mod( N );
 
 		return R.equals( r );
-	}
-	
-	// -----------------------------------------------------------------------------------------------------------------
-	/**
-	 * @param sign - r || s.
-	 */
-	public boolean verify( Binary hash, Binary sign )
-	{
-		r = new BigInteger( 1, sign.first( sign.size() / 2 ).getBytes() );
-		s = new BigInteger( 1, sign.last( sign.size() / 2 ).getBytes() );
-		return verifyImpl( hash );
 	}
 }
