@@ -6,17 +6,20 @@ package relay;
 import org.denom.*;
 import org.denom.format.JSONObject;
 import org.denom.log.*;
-import org.denom.net.d5.relay.RelayResourceClient;
+import org.denom.d5.relay.*;
+
+import static org.denom.Ex.MUST;
 
 // -----------------------------------------------------------------------------------------------------------------
 public class AcceptData
 {
 	ILog log;
-	RelayResourceData resourceData;
+	RelayResourceAcceptData resourceAcceptData;
 
 	String host;
 	int resourcePort;
-	String resourceName;
+
+	RelaySigner myKey;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	AcceptData()
@@ -24,47 +27,54 @@ public class AcceptData
 		log = new LogTime( new LogFile( "AcceptData.log", false ) );
 		try
 		{
-			JSONObject jo = new JSONObject().load( "AcceptData.config" );
+			// ReadOptions
+			JSONObject jo = new JSONObject().loadWithComments( "AcceptData.config" );
 			host = jo.getString( "Host" );
-			resourcePort = jo.getInt( "Resource Port" );
-			resourceName = jo.getString( "Name" );
+			int resourcePort = jo.getInt( "Resource Port" );
+			String resourceName = jo.getString( "Name" );
+			String resourceDescription = jo.getString( "Description" );
+			myKey = new RelaySigner();
+			myKey.readPrivateKeyFromJSON( jo.getJSONObject( "My Key" ) );
 
-			resourceData = new RelayResourceData( resourceName );
-			resourceData.setLog( log );
-			resourceData.setPrintCommands( jo.getBoolean( "Transport Log" ) );
-			resourceData.connect( host, resourcePort, 3 );
-			resourceData.start();
-		}
+			resourceAcceptData = new RelayResourceAcceptData( myKey, resourceName, resourceDescription );
+			resourceAcceptData.setLog( log );
+			resourceAcceptData.setPrintD5( jo.getBoolean( "Transport Log" ) );
+			resourceAcceptData.setOnClosed( this::onClosed );
+			resourceAcceptData.connect( host, resourcePort, 3 );
+			}
 		catch( Throwable ex )
 		{
 			log.writeln( Colors.RED_I, ex.toString() );
 		}
 	}
 
+	// -------------------------------------------------------------------------------------------------------------
+	private void onClosed()
+	{
+		log.writeln( Colors.RED_I, "Connection with Relay closed" );
+	}
+
 	// =================================================================================================================
-	class RelayResourceData extends RelayResourceClient
+	class RelayResourceAcceptData extends RelayResourceClient
 	{
 		long acceptedDataSize = 0;
-		public RelayResourceData( String resourceName )
+
+		// -------------------------------------------------------------------------------------------------------------
+		public RelayResourceAcceptData( RelaySigner resourceKey, String name, String description )
 		{
-			super( resourceName );
+			super( resourceKey, name, description, 4, "AcceptData" );
+			setCommandDataLimit( 100_000_000 );
 		}
 
 		// -------------------------------------------------------------------------------------------------------------
 		@Override
-		protected Binary cmdSend( Binary commandBuf )
+		protected Binary dispatchSend( long userHandle, int userToResourceIndex, int commandCode, Binary data )
 		{
-			int curDataSize = (commandBuf.size() - 16);
-			acceptedDataSize += curDataSize;
-			AcceptData.this.log.writeln( "Принято: " + curDataSize + ".  Всего: " + acceptedDataSize );
+			MUST( data.size() > 0, "Error: No data sent" );
+			acceptedDataSize += data.size();
+			AcceptData.this.log.writeln( "Принято: " + data.size() + ".  Всего: " + acceptedDataSize );
 
-			Binary resp = commandBuf.first( 12 );
-			if( curDataSize > 0 )
-			{
-				resp.addInt( 1 ).add( commandBuf.get( 17 ) );
-			}
-
-			return resp;
+			return data.first( 1 ); // Отправляем обратно первый байт данных
 		}
 	}
 
@@ -72,5 +82,7 @@ public class AcceptData
 	public static void main( String[] args )
 	{
 		new AcceptData();
-	}}
+	}
+
+}
 

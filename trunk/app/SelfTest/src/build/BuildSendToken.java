@@ -10,8 +10,9 @@ class BuildSendToken
 		ILog log = new LogConsole();
 		JarBuilder jb = new JarBuilder( new LogConsole(), "SendD5Token.jar" );
 		jb.addDirectory( ".bin" );
-		jb.addZip( "../../../libs/org.denom.common-2020.02.16.jar" );
-		jb.addZip( "../../../libs/org.denom.crypt-2020.02.16.jar" );
+		jb.addDirectory( "../../lib/libDenomCommon/.bin" );
+		jb.addDirectory( "../../lib/libDenomCrypt/.bin" );
+		jb.addDirectory( "../../lib/libDenomD5/.bin" );
 		jb.addManifest( sendtoken.SendExecuteToken.class );
 		jb.close();
 

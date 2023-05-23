@@ -4,5 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/libDenomCommon"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/libDenomCrypt"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/libDenomD5"/>
 	<classpathentry kind="output" path=".bin"/>
 </classpath>

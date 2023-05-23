@@ -3,7 +3,7 @@ import java.util.*;
 
 import org.denom.*;
 import org.denom.log.*;
-import org.denom.net.d5.*;
+import org.denom.d5.*;
 
 //import static org.denom.Binary.Bin;
 //import static org.denom.Ex.MUST;
@@ -33,3 +33,39 @@ public class SelfTest
 		client.close();
 	}
 }
+
+
+
+//columnName.setCellFactory( param ->
+//{
+//	return new TableCell<RelayContact, String>()
+//	{
+//		@Override
+//		protected void updateItem( String item, boolean empty )
+//		{
+//			super.updateItem( item, empty );
+//			super.setGraphic( null );
+//			super.setText( null );
+//
+//			if( item == null )
+//				return;
+//				
+//			RelayContact contact = getTableRow().getItem();
+//			super.setText( contact.getName() );
+//		}
+//	};
+//} );
+
+
+//columnName.setCellValueFactory( (cdf) -> 
+//{
+//	return new ObservableValueBase<String>()
+//	{
+//		@Override
+//		public String getValue()
+//		{
+//			return new Binary().random( 10 ).Hex();
+//			//return cdf.getValue().getName() + " 21323 23 ";
+//		}
+//	};
+//} );

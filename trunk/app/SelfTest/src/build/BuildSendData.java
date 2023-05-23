@@ -11,7 +11,8 @@ class BuildSendData
 		JarBuilder jb = new JarBuilder( new LogConsole(), "SendData.jar" );
 		jb.addDirectory( ".bin" );
 		jb.addDirectory( "../../lib/libDenomCommon/.bin" );
-		jb.addDirectory( "../../lib/libDenomRelay/.bin" );
+		jb.addDirectory( "../../lib/libDenomCrypt/.bin" );
+		jb.addDirectory( "../../lib/libDenomD5/.bin" );
 		jb.addManifest( relay.SendData.class );
 		jb.close();
 
