@@ -1,0 +1,1 @@
+start javaw -Xmx1G -jar DenomRelay.jar
