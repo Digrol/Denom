@@ -19,6 +19,9 @@ import static org.denom.Ex.*;
  */
 class Relay
 {
+	// Длина публичного ключа в байтах
+	public final static int PUBLIC_KEY_SIZE = 32;
+
 	final RelayOptions options;
 	private ILog log;
 
@@ -34,7 +37,7 @@ class Relay
 
 	boolean started = false;
 
-	Map<String, RelayResourceSession> resources = null;
+	Map<Binary, RelayResourceSession> resources = null;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	Relay( RelayOptions options, Consumer<Binary> shutdownConsumer, ILog log )
@@ -54,10 +57,10 @@ class Relay
 		resources = new HashMap<>();
 
 		workerExecutor = Executors.newFixedThreadPool( options.workerThreads,
-			new ThreadFactoryNamed( "DenomRelayWorker", Thread.NORM_PRIORITY, 0 ) );
+			new ThreadFactoryNamed( "DenomRelayWorker", Thread.NORM_PRIORITY, 0, false ) );
 
-		log.writeln( Colors.GRAY, "Start listening Resources on " + options.host + ":" + options.resourcePort );
-		serverResources = new TCPServer( log, options.host, options.resourcePort,
+		log.writeln( Colors.GRAY, "Start listening Resources on " + options.host + ":" + options.resource.port );
+		serverResources = new TCPServer( log, options.host, options.resource.port,
 				new RelayResourceSession( this, log ) );
 		
 		log.writeln( Colors.GRAY, "Start listening Users on " + options.host + ":" + options.userPort );
@@ -95,11 +98,11 @@ class Relay
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	ExecutorService getWorkerExecutor()
+	void doWork( Runnable someWork )
 	{
-		return workerExecutor;
+		workerExecutor.execute( someWork );
 	}
-
+	
 	// -----------------------------------------------------------------------------------------------------------------
 	public void executeToken( Binary token )
 	{

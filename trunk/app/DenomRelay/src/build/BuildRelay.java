@@ -10,6 +10,8 @@ class BuildRelay
 		JarBuilder jb = new JarBuilder( new LogConsole(), "DenomRelay.jar" );
 		jb.addDirectory( ".bin" );
 		jb.addDirectory( "../../lib/libDenomCommon/.bin" );
+		jb.addDirectory( "../../lib/libDenomD5/.bin" );
+		jb.addDirectory( "../../lib/libDenomCrypt/.bin" );
 		jb.addManifest( org.denom.net.d5.relay.RelayMain.class );
 		jb.close();
 

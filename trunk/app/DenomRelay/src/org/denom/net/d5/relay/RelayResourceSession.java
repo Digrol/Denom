@@ -9,9 +9,10 @@ import java.util.*;
 
 import org.denom.*;
 import org.denom.log.*;
-import org.denom.format.BinParser;
+import org.denom.format.*;
 import org.denom.net.*;
-import org.denom.net.d5.*;
+import org.denom.d5.*;
+import org.denom.d5.relay.*;
 
 import static org.denom.Binary.*;
 import static org.denom.Ex.*;
@@ -22,15 +23,17 @@ public class RelayResourceSession extends D5ResponseSession
 	protected final Relay relay;
 	protected final int resourceTimeoutSec;
 
-
-	protected String name = "";
+	// Большинство полей, передаваемых в ответе на WHO_ARE_YOU, нужно запоминать.
+	// Чтобы не заводить в этом классе аналогичные поля, просто сохраняем в сессии ответ на команду.
+	protected ResponseWhoAreYou resourceInfo = null;
 
 	// Resource serial number in Relay.
-	protected long id = 0;
+	protected long handle = 0;
 
+	// Connected users to this Resource
+	protected Map<Long, RelayUserSession> bindedUsers = new HashMap<>();
 
-	Map<Long, RelayUserSession> bindedUsers = new HashMap<>();
-
+	protected RelayAuth relayAuth = null;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
@@ -40,19 +43,17 @@ public class RelayResourceSession extends D5ResponseSession
 	{
 		super( relay.options.sessionBufSize, log );
 		this.relay = relay;
-		this.resourceTimeoutSec = relay.options.resourceTimeoutSec;
+		this.resourceTimeoutSec = relay.options.resource.timeoutSec;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	@Override
 	public RelayResourceSession newInstance( TCPServer tcpServer, SocketChannel clientSocket )
 	{
-		RelayResourceSession s = new RelayResourceSession( relay, log, tcpServer, clientSocket );
-		log.writeln( "Accept on Resource port. Remote Address: " + s.remoteAddress );
-
-		relay.getWorkerExecutor().execute( () -> s.sendCommand( RelayCmd.WHO_ARE_YOU, Bin() ) );
-
-		return s;
+		RelayResourceSession newSession = new RelayResourceSession( relay, log, tcpServer, clientSocket );
+		log.writeln( "Accept on Resource port. Remote Address: " + newSession.remoteAddress );
+		relay.doWork( newSession::commandWhoAreYou );
+		return newSession;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -60,8 +61,8 @@ public class RelayResourceSession extends D5ResponseSession
 	{
 		super( relay.options.sessionBufSize, log, tcpServer, clientSocket );
 		this.relay = relay;
-		this.resourceTimeoutSec = relay.options.resourceTimeoutSec;
-		
+		this.resourceTimeoutSec = relay.options.resource.timeoutSec;
+
 		try
 		{
 			socket.socket().setSoTimeout( resourceTimeoutSec * 1000 );
@@ -73,40 +74,42 @@ public class RelayResourceSession extends D5ResponseSession
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	public boolean isAlive()
+	private Binary emptyBin = new Binary();
+	public void commandEnumCommands()
 	{
-		try
-		{
-			int timeout = socket.socket().getSoTimeout();
-			socket.socket().setSoTimeout( 2 * 1000 );
-			sendCommand( D5Command.ENUM_COMMANDS, Bin() );
-			socket.socket().setSoTimeout( timeout );
-			return true;
-		}
-		catch( Throwable ex )
-		{
-			return false;
-		}
+		sendCommand( D5Command.ENUM_COMMANDS, emptyBin );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	@Override
 	protected void processResponse( D5Response response )
 	{
-		relay.getWorkerExecutor().execute( () -> dispatch( response ) );
+		relay.doWork( () -> dispatch( response ) );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Got Response from Resource.
+	 * Worker threads.
+	 */
 	private void dispatch( D5Response response )
 	{
 		try
 		{
+			if( response.status != D5Response.STATUS_OK )
+			{
+				THROW( response.status, String.format( "(0x%08X) %s", response.status, response.data.asUTF8() ) );
+			}
+
 			switch( response.code + 0x20000000 )
 			{
-				case RelayCmd.WHO_ARE_YOU: responseWhoAreYou( response ); break;
-				case RelayCmd.SEND:        responseSend( response ); break;
+				case D5Command.ENUM_COMMANDS     : break;
+				case RelayCommand.WHO_ARE_YOU    : responseWhoAreYou( response ); break;
+				case RelayCommand.RELAY_SIGN     : responseRelaySign( response ); break;
+				case RelayCommand.SEND:
+				case RelayCommand.SEND_ENCRYPTED : responseSend( response ); break;
 				default:
-					break;
+					throw new Ex("Unknown Response");
 			}
 		}
 		catch( Throwable ex )
@@ -117,35 +120,63 @@ public class RelayResourceSession extends D5ResponseSession
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * При подключении ресурса отправляем ему WHO ARE YOU, чтобы он представился.
+	 */
+	private void commandWhoAreYou()
+	{
+		this.relayAuth = new RelayAuth( relay.options.relayKey );
+		sendCommand( RelayCommand.WHO_ARE_YOU, relayAuth.requestWhoAreYou() );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Обработка ответа на команду WHO ARE YOU.
+	 */
 	private void responseWhoAreYou( D5Response response )
 	{
-		BinParser sbParser = new BinParser( response.data, 0 );
+		// Получили от ресурса ответ на команду WHO ARE YOU, но Relay команду не посылал
+		MUST( relayAuth != null, "Protocol Error: Got 'WHO ARE YOU' response" );
 
-		// Resource names himself
-		String resourceName = sbParser.getString();
+		this.resourceInfo = relayAuth.responseWhoAreYou( response.data );
+		MUST( resourceInfo.resourceName.length() <= relay.options.resource.nameMaxLen,
+				"Protocol Error: responseWhoAreYou: too long Name" );
+		MUST( resourceInfo.resourceDescription.length() <= relay.options.resource.descriptionMaxLen,
+				"Protocol Error: responseWhoAreYou: too long description" );
 
-		MUST( !resourceName.isEmpty() && (resourceName.length() <= 256), "responseWhoAreYou: Wrong resource name length" );
+		// Ресурс аутентифицирован, запоминаем его идентификаторы, добавляем в список ресурсов.
+
+		handle = relay.lastResourceID.incrementAndGet();
 
 		synchronized( relay.resources )
 		{
-			RelayResourceSession oldSession = relay.resources.get( resourceName );
+			// Закрываем сессию, если было старую подключение с таким же публичным ключом.
+			RelayResourceSession oldSession = relay.resources.get( resourceInfo.resourcePublicKey );
 			if( oldSession != null )
-			{
-				if( oldSession.getSocket().isOpen() )
-				{
-					throw new Ex( "responseWhoAreYou: Resource name busy: " + resourceName );
-				}
 				oldSession.close();
-			}
-			MUST( relay.resources.put( resourceName, this ) == null, "responseWhoAreYou: Resource name busy: " + resourceName );
+
+			relay.resources.put( resourceInfo.resourcePublicKey, this );
 		}
 
-		id = relay.lastResourceID.incrementAndGet();
+		log.writeln( "Resource connected."
+				+ "\nPublicKey: " + resourceInfo.resourcePublicKey.Hex()
+				+ "\nName: " + resourceInfo.resourceName
+				+ "\nID: " + Num_Bin( handle, 8 ).Hex()
+				+ "\nRemote address: " + remoteAddress.toString() );
 
-		log.writeln( "Resource connected. Name: " + resourceName + ". ID: " + Num_Bin( id, 8 ).Hex()
-				+ ". Remote address: " + remoteAddress.toString() );
+		// Отправить ресурсу подпись от Relay-а.
+		sendCommand( RelayCommand.RELAY_SIGN, relayAuth.requestRelaySign() );
+	}
 
-		name = resourceName;
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Обработка ответа на команду WHO ARE YOU.
+	 */
+	private void responseRelaySign( D5Response response )
+	{
+		// Получили от ресурса ответ на команду RELAY SIGN, но Relay команду не посылал
+		MUST( relayAuth != null, "Protocol Error: Got 'REALY SIGN' response" );
+		relayAuth = null;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -172,12 +203,12 @@ public class RelayResourceSession extends D5ResponseSession
 
 		if( userSession == null )
 			return;
-		
+
 		if( userSession.getSocket().isOpen() )
 		{
-			response.data.setLong( 0, this.id );
+			response.data.setLong( 0, this.handle );
 			response.index = response.data.getIntBE( 8 );
-			response.data.set( 8, 0 );
+			response.data.setInt( 8, 0 );
 			userSession.sendResponse( response );
 		}
 		else
@@ -195,44 +226,20 @@ public class RelayResourceSession extends D5ResponseSession
 	{
 		super.close();
 
-		synchronized( relay.resources )
+		if( resourceInfo != null )
 		{
-			relay.resources.remove( name );
+			synchronized( relay.resources )
+			{
+				relay.resources.remove( resourceInfo.resourcePublicKey );
+			}
+
+			log.writeln( "Resource disconnected."
+					+ "\nPublicKey: " + resourceInfo.resourcePublicKey.Hex()
+					+ "\nName: " + resourceInfo.resourceName
+					+ "\nHandle: " + Num_Bin( handle, 8 ).Hex() );
 		}
-
-		log.writeln( "Resource disconnected. Name: " + name + ". ID: " + Num_Bin( id, 8 ).Hex()
-				+ ". Remote address: " + remoteAddress.toString() );
+		
+		log.writeln( "Resource connection closed. Remote address: " + remoteAddress.toString() );
 	}
-
-//	// -----------------------------------------------------------------------------------------------------------------
-//	public void keepAliveResources()
-//	{
-//		relay.getWorkerExecutor().execute( () ->
-//		{
-//			synchronized( relay.resources )
-//			{
-//				long now = System.nanoTime();
-//				long intervalNanos = resourceTimeoutSec * 1_000_000_000L;
-//
-//				Iterator<D5ResponseSession> iter = relay.resources.values().iterator();
-//				while( iter.hasNext() )
-//				{
-//					RelayResourceSession session = (RelayResourceSession)iter.next();
-//					
-//					long diffTime = now - session.lastActivity;
-//					if( (diffTime < 0) || (diffTime > intervalNanos) )
-//					{
-//						if( !session.isAlive() )
-//						{
-//							session.close();
-//							session.log.writeln( Colors.WHITE, "Resource '" + 
-//									session.remoteAddress.getHostName() + "' inactive. Disconnected." );
-//							iter.remove();
-//						}
-//					}
-//				}
-//			}
-//		} );
-//	}
 
 }

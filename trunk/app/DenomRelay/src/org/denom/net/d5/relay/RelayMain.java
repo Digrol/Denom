@@ -55,16 +55,13 @@ public class RelayMain
 	{
 		try
 		{
-			if( !new File( CONFIG_FILENAME ).exists() )
-				return;
-
-			JSONObject jo = new JSONObject().load( CONFIG_FILENAME );
-
+			JSONObject jo = new JSONObject().loadWithComments( CONFIG_FILENAME );
 			options.fromJSON( jo );
 		}
 		catch( Throwable ex )
 		{
 			log.writeln( Colors.ERROR, ex.toString() );
+			throw ex;
 		}
 	}
 

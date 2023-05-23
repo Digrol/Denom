@@ -10,7 +10,8 @@ import org.denom.*;
 import org.denom.log.*;
 import org.denom.format.*;
 import org.denom.net.TCPServer;
-import org.denom.net.d5.*;
+import org.denom.d5.*;
+import org.denom.d5.relay.*;
 
 import static org.denom.Ex.MUST;
 import static org.denom.Binary.*;
@@ -51,11 +52,11 @@ public class RelayUserSession extends D5CommandSession
 	// -----------------------------------------------------------------------------------------------------------------
 	protected void processCommand( D5Command command )
 	{
-		relay.getWorkerExecutor().execute( () -> processCommandImpl( command ) );
+		relay.doWork( () -> processCommandImpl( command ) );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	protected void processCommandImpl( D5Command command )
+	private void processCommandImpl( D5Command command )
 	{
 		Binary data = Bin();
 		int status = D5Response.STATUS_OK;
@@ -95,13 +96,12 @@ public class RelayUserSession extends D5CommandSession
 	{
 		switch( command.code )
 		{
-			case D5Command.ENUM_COMMANDS      : return cmdEnumCommands();
-			case D5Command.EXECUTE_TOKEN      : return cmdExecuteToken( command.data );
+			case D5Command.ENUM_COMMANDS        : return onCmdEnumCommands();
+			case D5Command.EXECUTE_TOKEN        : return onCmdExecuteToken( command.data );
 
-			case RelayCmd.LIST_RESOURCES      : return cmdListResources( command );
-			case RelayCmd.IS_RESOURCE_PRESENT : return cmdIsResourcePresent( command );
-			case RelayCmd.SEND_TO             : return cmdSendTo( command );
-			case RelayCmd.SEND                : return cmdSend( command );
+			case RelayCommand.GET_RESOURCE_INFO : return onCmdGetResourceInfo( command );
+			case RelayCommand.SEND              : // Обрабатываются одинаково
+			case RelayCommand.SEND_ENCRYPTED    : return onCmdSend( command );
 
 			default:
 				throw new Ex( D5Response.STATUS_COMMAND_NOT_SUPPORTED );
@@ -109,112 +109,73 @@ public class RelayUserSession extends D5CommandSession
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private Binary cmdEnumCommands()
+	private Binary onCmdEnumCommands()
 	{
 		Binary b = Bin();
 		b.addInt( D5Command.ENUM_COMMANDS );
 		b.addInt( D5Command.EXECUTE_TOKEN );
-
+		b.addInt( RelayCommand.GET_RESOURCE_INFO );
+		b.addInt( RelayCommand.SEND );
+		b.addInt( RelayCommand.SEND_ENCRYPTED );
 		return b;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private Binary cmdExecuteToken( final Binary token )
+	private Binary onCmdExecuteToken( final Binary token )
 	{
 		relay.executeToken( token );
 		return Bin();
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private RelayResourceSession findResourceSession( String resourceName )
+	private RelayResourceSession findResourceSession( Binary resourcePublicKey )
 	{
 		RelayResourceSession resourceSession = null;
-		// Find resource by Name
-		MUST( resourceName.length() > 0, "Resource name is empty" );
+		// Find resource by PublicKey
+		MUST( resourcePublicKey.size() == relay.PUBLIC_KEY_SIZE, "Resource PublicKey length wrong" );
 		synchronized( relay.resources )
 		{
-			resourceSession = relay.resources.get( resourceName );
+			resourceSession = relay.resources.get( resourcePublicKey );
 		}
 
 		return resourceSession;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private Binary cmdListResources( D5Command command )
-	{
-		Binary buf = Bin().reserve( relay.resources.size() * 30 );
-		BinBuilder bb = new BinBuilder( buf );
-
-		synchronized( relay.resources )
-		{
-			bb.appendStringCollection( relay.resources.keySet() );
-		}
-
-		return buf;
-	}
-	
-	// -----------------------------------------------------------------------------------------------------------------
-	private Binary cmdIsResourcePresent( D5Command command )
+	private Binary onCmdGetResourceInfo( D5Command command )
 	{
 		BinParser bp = new BinParser( command.data, 0 );
-		String resourceName = bp.getString();
+		Binary resourcePublicKey = bp.getBinary();
 
-		RelayResourceSession resourceSession = findResourceSession( resourceName );
-		if( resourceSession == null )
+		ResponseGetResourceInfo resp = new ResponseGetResourceInfo();
+		resp.resourceHandle = 0;
+
+		RelayResourceSession resourceSession = findResourceSession( resourcePublicKey );
+		if( resourceSession != null )
 		{
-			return Bin( 8 );
+			resp.resourceHandle = resourceSession.handle;
+			resp.resourcePublicKey = resourceSession.resourceInfo.resourcePublicKey;
+			resp.resourceName = resourceSession.resourceInfo.resourceName;
+			resp.resourceDescription = resourceSession.resourceInfo.resourceDescription;
+
+			// Add local mapping Handle -> Resource Session
+			synchronized( bindedResources )
+			{
+				bindedResources.putIfAbsent( resourceSession.handle, resourceSession );
+			}
 		}
 
-		// Add local mapping Handle -> Resource Session
-		synchronized( bindedResources )
-		{
-			bindedResources.putIfAbsent( resourceSession.id, resourceSession );
-		}
-
-		return Bin().addLong( resourceSession.id );
-	}
-	
-	// -----------------------------------------------------------------------------------------------------------------
-	/**
-	 * Send message to Resource identified by Name.
-	 */
-	private Binary cmdSendTo( D5Command command )
-	{
-		BinParser bp = new BinParser( command.data, 0 );
-		String resourceName = bp.getString();
-		
-		RelayResourceSession resourceSession = findResourceSession( resourceName );
-		MUST( resourceSession != null, "Resource not found" );
-
-		// Add local mapping Handle -> Resource Session
-		synchronized( bindedResources )
-		{
-			bindedResources.putIfAbsent( resourceSession.id, resourceSession );
-		}
-
-		int dataLen = bp.getInt();
-		Binary newData = new Binary().reserve( dataLen + 16 );
-		BinBuilder bb = new BinBuilder( newData );
-		bb.append( this.id );
-		bb.append( command.index );
-		bb.append( command.data, bp.getOffset(), dataLen );
-
-		command.code = RelayCmd.SEND;
-		command.data = newData;
-		resourceSession.cmdSend( this, command );
-
-		return null; // Do not send Response now
+		return resp.toBin();
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Send message to Resource identified by Resource ID.
 	 */
-	private Binary cmdSend( D5Command command )
+	private Binary onCmdSend( D5Command command )
 	{
 		long resourceID = command.data.getLong( 0 );
-		int dataLen = command.data.getIntBE( 12 );
-		MUST( command.data.size() == (dataLen + 16 ), D5Response.STATUS_WRONG_SYNTAX );
+		MUST( command.data.size() > 12, D5Response.STATUS_WRONG_SYNTAX );
 
 		RelayResourceSession resourceSession = null;
 		synchronized( bindedResources )
