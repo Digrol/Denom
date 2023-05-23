@@ -80,12 +80,8 @@ public abstract class TCPServerSession
 	public void close()
 	{
 		writeQueue.clear();
-		try
-		{
-			selectionKey.cancel();
-			socket.close();
-		}
-		catch( IOException ex ) {}
+		try { selectionKey.cancel(); } catch( Throwable ex ) {}
+		try { socket.close(); } catch( Throwable ex ) {}
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

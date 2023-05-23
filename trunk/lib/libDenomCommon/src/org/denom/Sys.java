@@ -4,6 +4,8 @@
 package org.denom;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import java.io.File;
 import java.io.IOException;
@@ -14,13 +16,15 @@ import org.denom.log.ILog;
 import static org.denom.Ex.*;
 
 /**
- * Системно-зависимые утилиты. Работа с файлами и процессами.
+ * Some tools for work with files, threads, processes.
  */
 public final class Sys
 {
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * Приостановить выполнение текущего потока на {@code ms} миллисекунд.
+	 * Causes the currently executing thread to sleep for the specified number of milliseconds.
+	 * @throws Ex when current thread interrupted. The thread's interrupt status will be set,
+	 * i.e. Thread.currentThread().isInterrupted() == true.
 	 */
 	public static void sleep( long ms )
 	{
@@ -30,10 +34,32 @@ public final class Sys
 		}
 		catch( InterruptedException ex )
 		{
-			throw new Ex( ex.toString(), ex );
+			Thread.currentThread().interrupt();
+			throw new Ex( "Sleep interrupted" );
 		}
 	}
 
+	//------------------------------------------------------------------------------------------------------------------
+	/**
+	 * Shutdown Executor and wait some seconds until it stoped.
+	 * Throws exception if can't shutdown or thread interrupted.
+	 */
+	public static void shutdownNow( ExecutorService executor, int waitSeconds )
+	{
+		executor.shutdownNow();
+		try
+		{
+			if( !executor.awaitTermination( waitSeconds, TimeUnit.SECONDS ) )
+				throw new Ex( "Can't stop executor " + executor.toString() );
+		}
+		catch( InterruptedException ex )
+		{
+			Thread.currentThread().interrupt();
+			throw new Ex( "Executor shutdownNow() interrupted!" );
+		}
+	}
+	
+	
 	//------------------------------------------------------------------------------------------------------------------
 	/**
 	 * Запустить новый процесс и дождаться его завершения.
@@ -46,6 +72,11 @@ public final class Sys
 		try
 		{
 			return Runtime.getRuntime().exec( cmdLine ).waitFor();
+		}
+		catch( InterruptedException e )
+		{
+			Thread.currentThread().interrupt();
+			THROW( "Executing process with cmdLine '" + cmdLine + "' is interrupted" );
 		}
 		catch( Throwable ex )
 		{
@@ -77,6 +108,11 @@ public final class Sys
 		{
 			p = processBuilder.start();
 			return p.waitFor();
+		}
+		catch( InterruptedException e )
+		{
+			Thread.currentThread().interrupt();
+			THROW( "Executing process with cmdLine '" + cmdLine + "' is interrupted" );
 		}
 		catch( Throwable ex )
 		{

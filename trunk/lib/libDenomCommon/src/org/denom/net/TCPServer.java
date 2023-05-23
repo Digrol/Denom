@@ -43,8 +43,8 @@ public class TCPServer
 	{
 		this.log = log;
 		this.sessionConstructor = sessionConstructor;
-		
-		ioExecutor = Executors.newFixedThreadPool( 1, new ThreadFactoryNamed( this.getClass().getSimpleName(), 8, 0 ) );
+
+		ioExecutor = Executors.newFixedThreadPool( 1, new ThreadFactoryNamed( this.getClass().getSimpleName(), 8, 0, false ) );
 
 		try
 		{
@@ -143,7 +143,7 @@ public class TCPServer
 	/**
 	 * Вызывается в ioThread-е.
 	 */
-	private void acceptClient( SocketChannel clientSocket ) throws IOException
+	private void acceptClient( SocketChannel clientSocket )
 	{
 		try
 		{
@@ -159,7 +159,7 @@ public class TCPServer
 		}
 		catch( Throwable ex )
 		{
-			clientSocket.close();
+			try{ clientSocket.close(); } catch( Throwable ex2 ) {}
 		}
 	}
 
@@ -235,12 +235,8 @@ public class TCPServer
 						}
 						catch( IOException ex )
 						{
-							key.cancel();
-							try
-							{
-								key.channel().close();
-							}
-							catch( IOException ex2 ) {}
+							try { key.cancel(); } catch( Throwable ex2 ) {}
+							try { key.channel().close(); } catch( Throwable ex2 ) {}
 						}
 					}
 				}
@@ -274,15 +270,7 @@ public class TCPServer
 	// -----------------------------------------------------------------------------------------------------------------
 	public void close()
 	{
-		ioExecutor.shutdownNow();
-		try
-		{
-			MUST( ioExecutor.awaitTermination( 3, TimeUnit.SECONDS ), "Can't stop TCP Server processor IO Loop" );
-		}
-		catch( InterruptedException ex )
-		{
-			THROW( ex ); // Interrupted while wait stop TCP Server processor IO Loop.
-		}
+		Sys.shutdownNow( ioExecutor, 3 );
 	}
 
 }

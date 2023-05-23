@@ -304,7 +304,19 @@ public class SwingUtils
 	{
 		return new MouseAdapter()
 		{
+			@Override
+			public void mousePressed( final MouseEvent e )
+			{
+				showCopyMenu( e );
+			}
+
+			@Override
 			public void mouseReleased( final MouseEvent e )
+			{
+				showCopyMenu( e );
+			}
+
+			private void showCopyMenu( final MouseEvent e )
 			{
 				if( !e.isPopupTrigger() )
 				{

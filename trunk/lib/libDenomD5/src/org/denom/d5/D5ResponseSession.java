@@ -1,7 +1,7 @@
 // Denom.org
 // Author:  Sergey Novochenko,  Digrol@gmail.com
 
-package org.denom.net.d5;
+package org.denom.d5;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

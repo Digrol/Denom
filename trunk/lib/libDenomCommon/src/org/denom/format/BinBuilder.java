@@ -148,7 +148,7 @@ public class BinBuilder
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * Сериализовать коллекцию Binary.
+	 * Сериализовать коллекцию String.
 	 */
 	public BinBuilder appendStringCollection( final Collection<String> collection )
 	{

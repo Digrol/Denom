@@ -14,15 +14,17 @@ public class ThreadFactoryNamed implements ThreadFactory
 	private final String namePrefix;
 	private final int stackSize;
 	private final int priority;
-
+	private final boolean isDaemon;
+	
 	// -----------------------------------------------------------------------------------------------------------------
-	public ThreadFactoryNamed( String groupName, int priority, int stackSize )
+	public ThreadFactoryNamed( String groupName, int priority, int stackSize, boolean isDaemon )
 	{
 		group = new ThreadGroup( groupName );
 		namePrefix = groupName + "-";
 
 		this.stackSize = stackSize;
 		this.priority = priority;
+		this.isDaemon = isDaemon;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -30,6 +32,7 @@ public class ThreadFactoryNamed implements ThreadFactory
 	{
 		Thread t = new Thread( group, r, namePrefix + threadNumber.getAndIncrement(), stackSize );
 		t.setPriority( priority );
+		t.setDaemon( isDaemon );
 		return t;
 	}
 }

@@ -8,7 +8,7 @@ import org.denom.log.LogConsole;
  */
 class BuildLibs
 {
-	static String BUILD_DATE = "2020.03.24";
+	static String BUILD_DATE = "2023.05.23";
 
 	static String ROOT = "../../..";
 
@@ -29,7 +29,7 @@ class BuildLibs
 	private static void buildLib( String projectName, String jarPrefix )
 	{
 		String libPath = ROOT + "/trunk/lib/" + projectName;
-		String jarName = ROOT + "/libs/" + jarPrefix + "-" + BUILD_DATE + ".jar";
+		String jarName = ROOT + "/builds/libs/" + jarPrefix + "-" + BUILD_DATE + ".jar";
 
 		// Jar
 		JarBuilder jb = new JarBuilder( log, jarName );
@@ -48,7 +48,7 @@ class BuildLibs
 	private static void buildLibAndroid( String projectName, String jarPrefix )
 	{
 		String libPath = ROOT + "/trunk/lib/" + projectName;
-		String jarName = ROOT + "/libsAndroid/" + jarPrefix + "-android-" + BUILD_DATE + ".jar";
+		String jarName = ROOT + "/builds/libsAndroid/" + jarPrefix + "-android-" + BUILD_DATE + ".jar";
 
 		// Jar
 		JarBuilder jb = new JarBuilder( log, jarName );

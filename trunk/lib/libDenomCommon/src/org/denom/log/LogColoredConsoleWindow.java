@@ -28,8 +28,8 @@ public class LogColoredConsoleWindow implements ILog
 	private final static int BACKGROUND_COLOR = 0xFF101010;
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private JFrame consoleWindow;
-	private LogColoredTextPane coloredTextPaneLog;
+	public JFrame consoleWindow;
+	public LogColoredTextPane coloredTextPaneLog;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**

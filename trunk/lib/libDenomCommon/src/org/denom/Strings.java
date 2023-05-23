@@ -116,13 +116,23 @@ public class Strings
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss.SSS" );
-
-	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * @return Возвращает строку с текущим временем в формате: yyyy-MM-dd HH:mm:ss.SSS
+	 */
 	public static String currentDateTime()
 	{
-		Date curDate = new Date( System.currentTimeMillis() );
-		return DATE_FORMAT.format( curDate );
+		return new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss.SSS" ).format( new Date() );
 	}
 
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * @param format - формат даты и времени, например yyyy-MM-dd HH:mm:ss.SSS
+	 * См. class java.text.SimpleDateFormat
+	 * @return Возвращает строку с текущим временем в заданном формате.
+	 */
+	public static String currentDateTime( String format )
+	{
+		return new SimpleDateFormat( format ).format( new Date() );
+	}
+	
 }

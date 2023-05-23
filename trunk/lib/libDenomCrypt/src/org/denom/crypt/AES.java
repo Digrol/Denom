@@ -105,7 +105,7 @@ public class AES
 		Binary padded = Bin().reserve( data.size() + BLOCK_SIZE );
 		padded.add( data );
 		Crypt.pad( padded, BLOCK_SIZE, alignMode );
-		
+
 		MUST( (padded.size() & (BLOCK_SIZE - 1)) == 0, "Wrong data. Must be multiple of BLOCK_SIZE" );
 
 		encryptFirst( Bin(), Bin(), cryptMode, alignMode, iv );

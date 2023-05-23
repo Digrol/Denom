@@ -4,7 +4,6 @@
 package org.denom.crypt.hash;
 
 import java.util.Arrays;
-import org.denom.crypt.hash.IHash;
 import org.denom.Binary;
 
 /**

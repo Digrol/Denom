@@ -92,6 +92,10 @@ public class Ex extends RuntimeException
 	public String toString()
 	{
 		String msg = super.toString();
+		if( code != 0 )
+		{
+			msg += (ln + "Error code: "+ code);
+		}
 		if( !place.isEmpty() )
 		{
 			msg += (ln + "Place: "+ place);
