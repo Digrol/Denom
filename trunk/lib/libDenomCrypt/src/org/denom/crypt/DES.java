@@ -14,7 +14,7 @@ import static org.denom.Binary.*;
 /**
  * Шифр DES.
  */
-public class DES
+public class DES extends ABlockCipher
 {
 	public static final int BLOCK_SIZE = 8;
 	public static final int KEY_SIZE = 8;
@@ -74,24 +74,36 @@ public class DES
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public DES clone()
+	{
+		return new DES( this.getKey() );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public int getBlockSize()
+	{
+		return BLOCK_SIZE;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public int getKeySize()
+	{
+		return KEY_SIZE;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Задать ключ.
 	 * @param key - Ключ [8 байт].
 	 */
+	@Override
 	public DES setKey( final Binary key )
 	{
-		setKey( key, 0 );
-		return this;
-	}
-
-	/**
-	 * Задать ключ.
-	 * @param offset - смещение в массиве key, по которому лежит ключ.
-	 */
-	public DES setKey( final Binary key, int offset )
-	{
-		MUST( (offset + KEY_SIZE) <= key.size(), "Wrong key size" );
-		mKey.assign( key, offset, KEY_SIZE );
+		MUST( key.size() == KEY_SIZE, "Wrong key size" );
+		mKey.assign( key, 0, KEY_SIZE );
 		initKey();
 		return this;
 	}
@@ -100,6 +112,7 @@ public class DES
 	/**
 	 * @return copy of cipher key.
 	 */
+	@Override
 	public Binary getKey()
 	{
 		return mKey.clone();
@@ -109,6 +122,7 @@ public class DES
 	/**
 	 * Сгенерировать случайный ключ. Ключ будет установлен в качестве текущего.
 	 */
+	@Override
 	public Binary generateKey()
 	{
 		Binary akey = new Binary().randomSecure( KEY_SIZE );
@@ -126,6 +140,7 @@ public class DES
 	 * @param iv Входной начальный вектор
 	 * @return зашифрованные данные
 	 */
+	@Override
 	public Binary encrypt( final Binary data, CryptoMode cryptMode, AlignMode alignMode, final Binary iv )
 	{
 		MUST( iv.size() == BLOCK_SIZE, "Wrong IV length. Must be 8 bytes." );
@@ -151,6 +166,7 @@ public class DES
 	 * @param alignMode Режим выравнивания
 	 * @return Зашифрованные данные
 	 */
+	@Override
 	public Binary encrypt( final Binary data, CryptoMode cryptMode, AlignMode alignMode )
 	{
 		return encrypt( data, cryptMode, alignMode, IV0 );
@@ -165,6 +181,7 @@ public class DES
 	 * @param alignMode - Режим выравнивания.
 	 * @param iv - начальный вектор
 	 */
+	@Override
 	public void encryptFirst( final Binary data, Binary crypt, CryptoMode cryptMode, AlignMode alignMode, final Binary iv )
 	{
 		MUST( iv.size() == BLOCK_SIZE, "Wrong IV length. Must be 8 bytes." );
@@ -182,6 +199,7 @@ public class DES
 	 * @param data - Массив входных данных (нулевого размера, или кратный [8 байт]).
 	 * @param crypt - Массив для выходных данных (того же размера как и data).
 	 */
+	@Override
 	public void encryptNext( final Binary data, Binary crypt )
 	{
 		MUST( crypt.size() == data.size(), "data and crypt must be equal size" );
@@ -227,6 +245,7 @@ public class DES
 	 * @param crypt - Массив для выходных данных (того же размера как и data)</br>
 	 * при AlignMode.BLOCK меняет размер crypt.data
 	 */
+	@Override
 	public void encryptLast( final Binary data, Binary crypt )
 	{
 		if( align_mode == AlignMode.BLOCK )
@@ -248,6 +267,7 @@ public class DES
 	 * @param iv Входной начальный вектор
 	 * @return Расшифрованные данные
 	 */
+	@Override
 	public Binary decrypt( final Binary crypt, CryptoMode cryptMode, AlignMode alignMode, final Binary iv )
 	{
 		MUST( iv.size() == BLOCK_SIZE, "Wrong IV length. Must be 8 bytes." );
@@ -269,6 +289,7 @@ public class DES
 	 * @param alignMode Режим выравнивания
 	 * @return Расшифрованные данные
 	 */
+	@Override
 	public Binary decrypt( final Binary crypt, CryptoMode cryptMode, AlignMode alignMode )
 	{
 		return decrypt( crypt, cryptMode, alignMode, IV0 );
@@ -283,6 +304,7 @@ public class DES
 	 * @param alignMode Режим выравнивания
 	 * @param iv Начальный вектор
 	 */
+	@Override
 	public void decryptFirst( final Binary crypt, Binary data, CryptoMode cryptMode, AlignMode alignMode, final Binary iv )
 	{
 		MUST( iv.size() == BLOCK_SIZE, "Wrong IV length. Must be 8 bytes." );
@@ -300,6 +322,7 @@ public class DES
 	 * @param crypt - Массив входных данных (нулевого размера, или кратный [8 байт])
 	 * @param data - Массив для выходных данных (того же размера как и crypt)
 	 */
+	@Override
 	public void decryptNext( final Binary crypt, Binary data )
 	{
 		MUST( crypt.size() == data.size(), "crypt and data must be equal size" );
@@ -346,6 +369,7 @@ public class DES
 	 * @param data Массив для выходных данных (того же размера как и crypt). При AlignMode.BLOCK
 	 * меняет размер data.data
 	 */
+	@Override
 	public void decryptLast( final Binary crypt, Binary data )
 	{
 		if( align_mode == AlignMode.BLOCK )

@@ -31,4 +31,12 @@ public class SHA3 extends Keccak
 	{
 		return new SHA3( this.hashSizeBits );
 	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public SHA3 cloneState()
+	{
+		return (SHA3)super.cloneState();
+	}
+
 }

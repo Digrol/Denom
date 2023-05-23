@@ -19,9 +19,19 @@ public class HMAC
 	private final Binary IPAD = new Binary( BLOCK_SIZE, 0x36 );
 	private final Binary OPAD = new Binary( BLOCK_SIZE, 0x5c );
 
-	private Binary keyIPad;
-	private Binary keyOPad;
+	private Binary keyIPad = null;
+	private Binary keyOPad = null;
 	private IHash hash;
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * @param hash - Алгоритм хеширования.
+	 */
+	public HMAC( IHash hash )
+	{
+		MUST( hash != null, "Алгоритм хеширования = null" );
+		this.hash = hash;
+	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
@@ -58,15 +68,40 @@ public class HMAC
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
+	public int getSize()
+	{
+		return hash.size();
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Вычислить HMAC.
 	 * @param data - Произвольные данные, для которых вычисляется HMAC.
 	 */
 	public Binary calc( Binary data )
 	{
+		MUST( keyIPad != null, "HMAC key not set" );
 		Binary hash_ipad = hash.calc( Bin( keyIPad, data ) );
 		Binary result = hash.calc( Bin( keyOPad, hash_ipad ) );
 		return result;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public HMAC clone()
+	{
+		return new HMAC( this.hash.clone() );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public HMAC cloneWithKey()
+	{
+		HMAC clone = new HMAC( this.hash.clone() );
+		if( keyIPad != null )
+		{
+			clone.keyIPad = this.keyIPad.clone();
+			clone.keyOPad = this.keyOPad.clone();
+		}
+		return clone;
 	}
 
 }

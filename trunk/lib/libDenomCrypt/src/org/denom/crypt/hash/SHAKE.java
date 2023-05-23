@@ -32,4 +32,12 @@ public class SHAKE extends Keccak
 	{
 		return new SHAKE( this.hashSizeBits );
 	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public SHAKE cloneState()
+	{
+		return (SHAKE)super.cloneState();
+	}
+
 }

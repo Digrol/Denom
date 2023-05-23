@@ -12,7 +12,7 @@ import static org.denom.Ex.*;
 /**
  * Шифр TripleDES (DES-EDE2).
  */
-public class DES3
+public class DES2_EDE extends ABlockCipher
 {
 	public static final int KEY_SIZE = 16;
 	public static final int BLOCK_SIZE = 8;
@@ -21,7 +21,7 @@ public class DES3
 	/**
 	 * Ключ задать позже.
 	 */
-	public DES3()
+	public DES2_EDE()
 	{
 		this( Bin(KEY_SIZE) );
 	}
@@ -30,7 +30,7 @@ public class DES3
 	/**
 	 * @param key Ключ [16 байт]
 	 */
-	public DES3( final Binary key )
+	public DES2_EDE( final Binary key )
 	{
 		des1 = new DES( new Binary( BLOCK_SIZE ) );
 		des2 = new DES( new Binary( BLOCK_SIZE ) );
@@ -38,24 +38,46 @@ public class DES3
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public DES2_EDE clone()
+	{
+		return new DES2_EDE( this.getKey() );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public int getBlockSize()
+	{
+		return BLOCK_SIZE;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public int getKeySize()
+	{
+		return KEY_SIZE;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Задать ключ шифрования.
 	 * @param key Ключ [16 байт]
 	 */
-	public DES3 setKey( final Binary key )
+	@Override
+	public DES2_EDE setKey( final Binary key )
 	{
 		MUST( key.size() == KEY_SIZE, "Wrong key size" );
-		des1.setKey( key, 0 );
-		des2.setKey( key, DES.KEY_SIZE );
+		des1.setKey( key.first( DES.KEY_SIZE ) );
+		des2.setKey( key.last( DES.KEY_SIZE ) );
 		return this;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Получить значение ключа шифрования.
-	 * 
 	 * @return Копия значения ключа
 	 */
+	@Override
 	public Binary getKey()
 	{
 		return Bin( des1.getKey(), des2.getKey() );
@@ -65,6 +87,7 @@ public class DES3
 	/**
 	 * Сгенерировать случайный ключ. Ключ будет установлен в качестве текущего.
 	 */
+	@Override
 	public Binary generateKey()
 	{
 		des1.generateKey();
@@ -81,6 +104,7 @@ public class DES3
 	 * @param iv Входной начальный вектор
 	 * @return Зашифрованные данные
 	 */
+	@Override
 	public Binary encrypt( final Binary data, CryptoMode cryptMode, AlignMode alignMode, final Binary iv )
 	{
 		MUST( iv.size() == BLOCK_SIZE, "Wrong IV length. Must be 8 bytes." );
@@ -106,6 +130,7 @@ public class DES3
 	 * @param alignMode Режим выравнивания
 	 * @return Зашифрованные данные
 	 */
+	@Override
 	public Binary encrypt( final Binary data, CryptoMode cryptMode, AlignMode alignMode )
 	{
 		return encrypt( data, cryptMode, alignMode, IV0 );
@@ -120,6 +145,7 @@ public class DES3
 	 * @param alignMode Режим выравнивания
 	 * @param iv Начальный вектор
 	 */
+	@Override
 	public void encryptFirst( final Binary data, Binary crypt, CryptoMode cryptMode, AlignMode alignMode, final Binary iv )
 	{
 		MUST( iv.size() == BLOCK_SIZE, "Wrong IV length. Must be 8 bytes." );
@@ -137,6 +163,7 @@ public class DES3
 	 * @param data Массив входных данных (нулевого размера, или кратный [8 байт])
 	 * @param crypt Массив для выходных данных (того же размера как и data)
 	 */
+	@Override
 	public void encryptNext( final Binary data, Binary crypt)
 	{
 		MUST( crypt.size() == data.size(), "data and crypt must be equal size" );
@@ -194,6 +221,7 @@ public class DES3
 	 * @param crypt - Массив для выходных данных (того же размера как и data),</br>
 	 * при AlignMode.BLOCK меняет размер crypt.data
 	 */
+	@Override
 	public void encryptLast( final Binary data, Binary crypt )
 	{
 		if( align_mode == AlignMode.BLOCK )
@@ -215,6 +243,7 @@ public class DES3
 	 * @param iv - Входной начальный вектор
 	 * @return Расшифрованные данные
 	 */
+	@Override
 	public Binary decrypt( final Binary crypt, CryptoMode cryptMode, AlignMode alignMode, final Binary iv )
 	{
 		MUST( iv.size() == BLOCK_SIZE, "Wrong IV length. Must be 8 bytes." );
@@ -236,6 +265,7 @@ public class DES3
 	 * @param alignMode - Режим выравнивания
 	 * @return Расшифрованные данные
 	 */
+	@Override
 	public Binary decrypt( final Binary crypt, CryptoMode cryptMode, AlignMode alignMode )
 	{
 		return decrypt( crypt, cryptMode, alignMode, IV0 );
@@ -250,6 +280,7 @@ public class DES3
 	 * @param alignMode - Режим выравнивания
 	 * @param iv - Начальный вектор
 	 */
+	@Override
 	public void decryptFirst( final Binary crypt, Binary data, CryptoMode cryptMode, AlignMode alignMode, final Binary iv )
 	{
 		MUST( iv.size() == BLOCK_SIZE, "Wrong IV length. Must be 8 bytes." );
@@ -268,6 +299,7 @@ public class DES3
 	 * @param crypt Массив входных данных (нулевого размера, или кратный [8 байт])
 	 * @param data Массив для выходных данных (того же размера как и crypt)
 	 */
+	@Override
 	public void decryptNext( final Binary crypt, Binary data )
 	{
 		MUST( crypt.size() == data.size(), "crypt and data must be equal size" );
@@ -328,6 +360,7 @@ public class DES3
 	 * @param data Массив для выходных данных (того же размера как и crypt) при AlignMode.BLOCK
 	 * меняет размер data.data
 	 */
+	@Override
 	public void decryptLast( final Binary crypt, Binary data )
 	{
 		if( align_mode == AlignMode.BLOCK)
@@ -460,7 +493,7 @@ public class DES3
 	 */
 	public static Binary calcKCV( final Binary keyValue )
 	{
-		Binary crypt = new DES3( keyValue ).encrypt( Bin( 8 ), CryptoMode.ECB, AlignMode.NONE );
+		Binary crypt = new DES2_EDE( keyValue ).encrypt( Bin( 8 ), CryptoMode.ECB, AlignMode.NONE );
 		return crypt.slice( 0, 3 );
 	}
 	

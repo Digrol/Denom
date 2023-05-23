@@ -3,6 +3,7 @@
 
 package org.denom.crypt.hash;
 
+import java.util.Arrays;
 import org.denom.Binary;
 
 import static org.denom.Ex.MUST;
@@ -57,6 +58,16 @@ public class SHA512t extends SHA512
 		return new SHA512t( hashSizeBits );
 	}
 
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public SHA512t cloneState()
+	{
+		SHA512t cloned = (SHA512t)super.cloneState();
+		MUST( cloned.hashSizeBits == this.hashSizeBits, "Wrong implementation of cloneState" );
+		MUST( Arrays.equals( cloned.IV, this.IV ), "Wrong implementation of cloneState" );
+		return cloned;
+	}
+	
 	// -----------------------------------------------------------------------------------------------------------------
 	private void calcIV()
 	{

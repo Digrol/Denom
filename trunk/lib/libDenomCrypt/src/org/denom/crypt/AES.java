@@ -13,7 +13,7 @@ import static org.denom.Ex.*;
 /**
  * BlockCipher AES (Advanced Encryption Standard) aka Rijndael.
  */
-public class AES 
+public class AES extends ABlockCipher
 {
 	public static final int BLOCK_SIZE = 16;
 
@@ -33,6 +33,27 @@ public class AES
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public AES clone()
+	{
+		return new AES( this.getKey() );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public int getBlockSize()
+	{
+		return BLOCK_SIZE;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public int getKeySize()
+	{
+		return 16;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
 	private static void checkKeySize( int key_size )
 	{
 		MUST( (key_size == 16) || (key_size == 24) || (key_size == 32), "Invalid AES key size" );
@@ -43,6 +64,7 @@ public class AES
 	 * Задать ключ шифрования.
 	 * @param key Ключ [16 или 24 или 32 байт]
 	 */
+	@Override
 	public AES setKey( final Binary key )
 	{
 		checkKeySize( key.size() );
@@ -62,9 +84,8 @@ public class AES
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Получить значение ключа шифрования.
-	 * 
-	 * @return Копия значения ключа
 	 */
+	@Override
 	public Binary getKey()
 	{
 		return m_key.clone();
@@ -83,6 +104,7 @@ public class AES
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
+	@Override
 	public Binary generateKey()
 	{
 		return generateKey( 16 );
@@ -98,6 +120,7 @@ public class AES
 	 * @param iv Входной начальный вектор
 	 * @return Зашифрованные данные
 	 */
+	@Override
 	public Binary encrypt( final Binary data, CryptoMode cryptMode, AlignMode alignMode, Binary iv )
 	{
 		MUST( iv.size() == BLOCK_SIZE, "Wrong IV length. Must be BLOCK_SIZE." );
@@ -105,7 +128,7 @@ public class AES
 		Binary padded = Bin().reserve( data.size() + BLOCK_SIZE );
 		padded.add( data );
 		Crypt.pad( padded, BLOCK_SIZE, alignMode );
-
+		
 		MUST( (padded.size() & (BLOCK_SIZE - 1)) == 0, "Wrong data. Must be multiple of BLOCK_SIZE" );
 
 		encryptFirst( Bin(), Bin(), cryptMode, alignMode, iv );
@@ -123,6 +146,7 @@ public class AES
 	 * @param alignMode Режим выравнивания
 	 * @return Зашифрованные данные
 	 */
+	@Override
 	public Binary encrypt( final Binary data, CryptoMode cryptMode, AlignMode alignMode )
 	{
 		return encrypt( data, cryptMode, alignMode, IV0 );
@@ -138,6 +162,7 @@ public class AES
 	 * @param alignMode Режим выравнивания
 	 * @param iv Начальный вектор
 	 */
+	@Override
 	public void encryptFirst( final Binary data, Binary crypt, CryptoMode cryptMode, AlignMode alignMode, final Binary iv )
 	{
 		MUST( iv.size() == BLOCK_SIZE, "Wrong IV length. Must be BLOCK_SIZE bytes." );
@@ -156,6 +181,7 @@ public class AES
 	 * @param data Массив входных данных (может быть нулевого размера, или кратным [16 байт])
 	 * @param crypt Массив для выходных данных ( того же размера как и data )
 	 */
+	@Override
 	public void encryptNext( final Binary data, Binary crypt )
 	{
 		MUST( crypt.size() == data.size(), "data and crypt must be equal size" );
@@ -202,6 +228,7 @@ public class AES
 	 * @param crypt Массив для выходных данных (того же размера как и data)</br>
 	 * при AlignMode.BLOCK меняется размер crypt.data
 	 */
+	@Override
 	public void encryptLast( final Binary data, Binary crypt )
 	{
 		if( align_mode == AlignMode.BLOCK )
@@ -224,6 +251,7 @@ public class AES
 	 * @param iv Входной начальный вектор
 	 * @return Расшифрованные данные
 	 */
+	@Override
 	public Binary decrypt( Binary crypt, CryptoMode cryptMode, AlignMode alignMode, Binary iv )
 	{
 		MUST( iv.size() == BLOCK_SIZE, "Wrong IV length. Must be BLOCK_SIZE." );
@@ -246,6 +274,7 @@ public class AES
 	 * @param alignMode Режим выравнивания
 	 * @return Расшифрованные данные
 	 */
+	@Override
 	public Binary decrypt( final Binary crypt, CryptoMode cryptMode, AlignMode alignMode )
 	{
 		return decrypt( crypt, cryptMode, alignMode, IV0 );
@@ -261,6 +290,7 @@ public class AES
 	 * @param alignMode Режим выравнивания
 	 * @param iv Начальный вектор
 	 */
+	@Override
 	public void decryptFirst( final Binary crypt, Binary data, CryptoMode cryptMode, AlignMode alignMode, final Binary iv )
 	{
 		MUST( iv.size() == BLOCK_SIZE, "Wrong IV length. Must be BLOCK_SIZE." );
@@ -279,6 +309,7 @@ public class AES
 	 * @param crypt Массив входных данных (нулевого размера, или кратный [16 байт])
 	 * @param data Массив для выходных данных (того же размера как и crypt)
 	 */
+	@Override
 	public void decryptNext( final Binary crypt, Binary data )
 	{
 		MUST( crypt.size() == data.size(), "crypt and data must be equal size" );
@@ -326,6 +357,7 @@ public class AES
 	 * @param data Массив для выходных данных (того же размера как и crypt) при AlignMode.BLOCK
 	 * меняет размер data.data
 	 */
+	@Override
 	public void decryptLast( final Binary crypt, Binary data )
 	{
 		if( align_mode == AlignMode.BLOCK )

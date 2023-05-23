@@ -6,6 +6,8 @@ package org.denom.crypt.hash;
 import java.util.Arrays;
 import org.denom.Binary;
 
+import static org.denom.Ex.THROW;
+
 /**
  * Cryptographic hash function GOST R 34.11-94.
  * Very slow.
@@ -13,14 +15,35 @@ import org.denom.Binary;
 public class GOST3411_94 extends IHash
 {
 	public static final int HASH_SIZE = 32;
-
 	private static final int BLOCK_SIZE = 32;
+
+	private byte[] H = new byte[ BLOCK_SIZE ];
+	private byte[] M = new byte[ BLOCK_SIZE ];
+	private byte[] Sum = new byte[ BLOCK_SIZE ];
+	private byte[][] C = new byte[ 4 ][ BLOCK_SIZE ];
+	private Binary L = new Binary( BLOCK_SIZE );
 
 	// -----------------------------------------------------------------------------------------------------------------
 	public GOST3411_94()
 	{
 		super( BLOCK_SIZE );
 		reset();
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public GOST3411_94 clone()
+	{
+		THROW( "GOST3411_94 clone Not implemented" );
+		return null;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public GOST3411_94 cloneState()
+	{
+		THROW( "GOST3411_94 cloneState Not implemented" );
+		return null;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -48,13 +71,6 @@ public class GOST3411_94 extends IHash
 		Arrays.fill( C[ 3 ], (byte)0 );
 		System.arraycopy( C2, 0, C[ 2 ], 0, C2.length );
 	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	private byte[] H = new byte[ BLOCK_SIZE ];
-	private byte[] M = new byte[ BLOCK_SIZE ];
-	private byte[] Sum = new byte[ BLOCK_SIZE ];
-	private byte[][] C = new byte[ 4 ][ BLOCK_SIZE ];
-	private Binary L = new Binary( BLOCK_SIZE );
 
 	// -----------------------------------------------------------------------------------------------------------------
 	@Override

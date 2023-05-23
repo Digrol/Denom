@@ -3,10 +3,8 @@
 
 package org.denom.crypt.hash;
 
-import java.io.*;
-
+import java.util.Arrays;
 import org.denom.Binary;
-import static org.denom.Ex.*;
 
 /**
  * Cryptographic hash function SHA-1.
@@ -14,6 +12,10 @@ import static org.denom.Ex.*;
 public class SHA1 extends IHash
 {
 	public final static int HASH_SIZE = 20;
+	private final static int BLOCK_SIZE = 64;
+
+	private int[] H = new int[ 5 ];
+	private int[] W = new int[ 80 ];
 
 	// -----------------------------------------------------------------------------------------------------------------
 	public SHA1()
@@ -41,6 +43,15 @@ public class SHA1 extends IHash
 	public SHA1 clone()
 	{
 		return new SHA1();
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public SHA1 cloneState()
+	{
+		SHA1 cloned = (SHA1)this.cloneStateBase();
+		cloned.H = Arrays.copyOf( this.H, this.H.length );
+		return cloned;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -84,41 +95,6 @@ public class SHA1 extends IHash
 		tail.setLong( tail.size() - 8, processedBytes << 3 );
 		processBlock( tail, 0 );
 	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	/**
-	 * Вычислить хеш содержимого указанного файла.
-	 */
-	public Binary calcFileHash( String fileName )
-	{
-		reset();
-
-		try( RandomAccessFile file = new RandomAccessFile( fileName, "r" ) )
-		{
-			Binary buf = new Binary();
-			long size = file.length();
-			while( size > 0 )
-			{
-				buf.resize( 0x10000 );
-				int chunkSize = file.read( buf.getDataRef(), 0, buf.getDataRef().length );
-				MUST( chunkSize > 0, "Error while hashing file " + fileName );
-				buf.resize( chunkSize );
-				process( buf );
-				size -= chunkSize;
-			}
-		}
-		catch( IOException ex )
-		{
-			THROW( ex.toString() );
-		}
-		return getHash();
-	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	private int[] H = new int[ 5 ];
-
-	private final static int BLOCK_SIZE = 64;
-	private int[] W = new int[ 80 ];
 
 	// -----------------------------------------------------------------------------------------------------------------
 	protected void processBlock( final Binary data, int offset )

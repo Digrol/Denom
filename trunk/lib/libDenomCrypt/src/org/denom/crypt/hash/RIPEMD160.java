@@ -4,6 +4,7 @@
 package org.denom.crypt.hash;
 
 import org.denom.Binary;
+import java.util.Arrays;
 
 import static java.lang.Integer.rotateLeft;
 
@@ -13,6 +14,11 @@ import static java.lang.Integer.rotateLeft;
 public class RIPEMD160 extends IHash
 {
 	public final static int HASH_SIZE = 20;
+
+	private final static int BLOCK_SIZE = 64;
+
+	private int[] X = new int[ 16 ];
+	private int[] H = new int[ 5 ];
 
 	// -----------------------------------------------------------------------------------------------------------------
 	public RIPEMD160()
@@ -40,6 +46,16 @@ public class RIPEMD160 extends IHash
 	public RIPEMD160 clone()
 	{
 		return new RIPEMD160();
+	}
+
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public RIPEMD160 cloneState()
+	{
+		RIPEMD160 cloned = (RIPEMD160)this.cloneStateBase();
+		cloned.H = Arrays.copyOf( this.H, this.H.length );
+		return cloned;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -85,11 +101,6 @@ public class RIPEMD160 extends IHash
 		processBlock( tail, 0 );
 	}
 
-	// -----------------------------------------------------------------------------------------------------------------
-	private int[] X = new int[ 16 ];
-	private int[] H = new int[ 5 ];
-
-	private final static int BLOCK_SIZE = 64;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	protected void processBlock( Binary data, int offset )

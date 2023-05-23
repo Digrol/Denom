@@ -14,6 +14,20 @@ import static org.denom.Ex.*;
  */
 public class Keccak extends IHash
 {
+	protected int hashSizeBits;
+	protected byte padBits = 0x01;
+
+	protected long[] state = new long[ 25 ];
+
+	// -----------------------------------------------------------------------------------------------------------------
+	private static long[] CONSTANTS = new long[] {
+		0x0000000000000001L, 0x0000000000008082L, 0x800000000000808aL, 0x8000000080008000L,
+		0x000000000000808bL, 0x0000000080000001L, 0x8000000080008081L, 0x8000000000008009L,
+		0x000000000000008aL, 0x0000000000000088L, 0x0000000080008009L, 0x000000008000000aL,
+		0x000000008000808bL, 0x800000000000008bL, 0x8000000000008089L, 0x8000000000008003L,
+		0x8000000000008002L, 0x8000000000000080L, 0x000000000000800aL, 0x800000008000000aL,
+		0x8000000080008081L, 0x8000000000008080L, 0x0000000080000001L, 0x8000000080008008L };
+
 	// -----------------------------------------------------------------------------------------------------------------
 	public Keccak( int bitLen )
 	{
@@ -46,6 +60,18 @@ public class Keccak extends IHash
 	public Keccak clone()
 	{
 		return new Keccak( this.hashSizeBits );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public Keccak cloneState()
+	{
+		Keccak cloned = (Keccak)super.cloneStateBase();
+		MUST( cloned.hashSizeBits == this.hashSizeBits, "Wrong implementation of cloneState" );
+		MUST( cloned.padBits == this.padBits, "Wrong implementation of cloneState" );
+
+		cloned.state = Arrays.copyOf( this.state, this.state.length );
+		return cloned;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -122,21 +148,6 @@ public class Keccak extends IHash
 		hash.resize( wantHashSize );
 		return hash;
 	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	protected int hashSizeBits;
-	protected byte padBits = 0x01;
-
-	protected long[] state = new long[ 25 ];
-
-	// -----------------------------------------------------------------------------------------------------------------
-	private static long[] CONSTANTS = new long[] {
-		0x0000000000000001L, 0x0000000000008082L, 0x800000000000808aL, 0x8000000080008000L,
-		0x000000000000808bL, 0x0000000080000001L, 0x8000000080008081L, 0x8000000000008009L,
-		0x000000000000008aL, 0x0000000000000088L, 0x0000000080008009L, 0x000000008000000aL,
-		0x000000008000808bL, 0x800000000000008bL, 0x8000000000008089L, 0x8000000000008003L,
-		0x8000000000008002L, 0x8000000000000080L, 0x000000000000800aL, 0x800000008000000aL,
-		0x8000000080008081L, 0x8000000000008080L, 0x0000000080000001L, 0x8000000080008008L };
 
 	// -----------------------------------------------------------------------------------------------------------------
 	private void permutation()

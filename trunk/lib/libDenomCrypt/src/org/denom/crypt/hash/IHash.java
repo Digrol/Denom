@@ -3,7 +3,11 @@
 
 package org.denom.crypt.hash;
 
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import org.denom.Binary;
+
+import static org.denom.Ex.*;
 
 /**
  * Abstract cryptographic hash function.
@@ -116,8 +120,61 @@ public abstract class IHash implements Cloneable
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
+	 * Convenience.
+	 * Calc hash of file body.
+	 */
+	public Binary calcFileHash( String fileName )
+	{
+		reset();
+
+		try( RandomAccessFile file = new RandomAccessFile( fileName, "r" ) )
+		{
+			Binary buf = new Binary();
+			long size = file.length();
+			while( size > 0 )
+			{
+				buf.resize( 0x10000 );
+				int chunkSize = file.read( buf.getDataRef(), 0, buf.getDataRef().length );
+				MUST( chunkSize > 0, "Error while hashing file " + fileName );
+				buf.resize( chunkSize );
+				process( buf );
+				size -= chunkSize;
+			}
+		}
+		catch( IOException ex )
+		{
+			THROW( ex.toString() );
+		}
+		return getHash();
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
 	 * Resets state.
 	 * @return hash of all processed data.
 	 */
 	public abstract Binary getHash();
+	
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	/**
+	 * Create new object of same class without current state.
+	 */
+	public abstract IHash clone();
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Create new object of same class WITH current state.
+	 */
+	public abstract IHash cloneState();
+	
+	// -----------------------------------------------------------------------------------------------------------------
+	protected IHash cloneStateBase()
+	{
+		IHash cloned = this.clone();
+		MUST( cloned.blockSize == this.blockSize, "Wrong implementation of cloneState" );
+		cloned.tail = this.tail.clone();
+		cloned.processedBytes = this.processedBytes;
+		return cloned;
+	}
 }

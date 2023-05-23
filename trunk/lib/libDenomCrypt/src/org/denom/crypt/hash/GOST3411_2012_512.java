@@ -6,6 +6,8 @@ package org.denom.crypt.hash;
 import java.util.Arrays;
 import org.denom.Binary;
 
+import static org.denom.Ex.THROW;
+
 /**
  * Cryptographic hash function GOST R 34.11-2012 (512 bit).
  */
@@ -14,10 +16,35 @@ public class GOST3411_2012_512 extends IHash
 	private static final int BLOCK_SIZE = 64;
 
 	// -----------------------------------------------------------------------------------------------------------------
+	private final byte[] N = new byte[64];
+	private final byte[] Sigma = new byte[64];
+	private final byte[] Ki = new byte[64];
+	protected final byte[] state = new byte[64];
+	private final byte[] savedState = new byte[64];
+	private long[] longArr = new long[ 8 ];
+	private final Binary reversedBlock = new Binary( BLOCK_SIZE );
+
+	// -----------------------------------------------------------------------------------------------------------------
 	public GOST3411_2012_512()
 	{
 		super( BLOCK_SIZE );
 		reset();
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public GOST3411_2012_512 clone()
+	{
+		THROW( "GOST3411_2012_512 clone Not implemented" );
+		return null;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public GOST3411_2012_512 cloneState()
+	{
+		THROW( "GOST3411_2012_512 cloneState Not implemented" );
+		return null;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -43,15 +70,6 @@ public class GOST3411_2012_512 extends IHash
 		Arrays.fill( Sigma, (byte)0 );
 		Arrays.fill( state, (byte)0 );
 	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	private final byte[] N = new byte[64];
-	private final byte[] Sigma = new byte[64];
-	private final byte[] Ki = new byte[64];
-	protected final byte[] state = new byte[64];
-	private final byte[] savedState = new byte[64];
-	private long[] longArr = new long[ 8 ];
-	private final Binary reversedBlock = new Binary( BLOCK_SIZE );
 
 	// -----------------------------------------------------------------------------------------------------------------
 	protected void processBlock( Binary data, int offset )

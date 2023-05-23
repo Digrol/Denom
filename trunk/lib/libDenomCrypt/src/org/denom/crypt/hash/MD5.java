@@ -3,16 +3,21 @@
 
 package org.denom.crypt.hash;
 
+import java.util.Arrays;
 import org.denom.Binary;
 
 import static java.lang.Integer.rotateLeft;
 
 /**
- * Криптографическое хеширование MD5.
+ * Cryptographic hash function MD5.
  */
 public class MD5 extends IHash
 {
 	public final static int HASH_SIZE = 16;
+	private final static int BLOCK_SIZE = 64;
+
+	private int[] H = new int[ 4 ];
+	private int[] W = new int[ 16 ];
 
 	// -----------------------------------------------------------------------------------------------------------------
 	public MD5()
@@ -40,6 +45,15 @@ public class MD5 extends IHash
 	public MD5 clone()
 	{
 		return new MD5();
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public MD5 cloneState()
+	{
+		MD5 cloned = (MD5)this.cloneStateBase();
+		cloned.H = Arrays.copyOf( this.H, this.H.length );
+		return cloned;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -83,12 +97,6 @@ public class MD5 extends IHash
 		tail.setLongLE( tail.size() - 8, processedBytes << 3 );
 		processBlock( tail, 0 );
 	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	private int[] W = new int[ 16 ];
-	private int[] H = new int[ 4 ];
-
-	private final static int BLOCK_SIZE = 64;
 
 	// -----------------------------------------------------------------------------------------------------------------
 	protected void processBlock( final Binary data, int offset )
