@@ -13,7 +13,7 @@ import static org.denom.Binary.Bin;
 
 public class TestDES3Parts
 {
-	static int BLOCK_SIZE = DES3.BLOCK_SIZE;
+	static int BLOCK_SIZE = DES2_EDE.BLOCK_SIZE;
 	static Random rand = new Random( System.nanoTime() );
 
 	public static final int ITERATIONS = 1000;
@@ -63,7 +63,7 @@ public class TestDES3Parts
 	// -----------------------------------------------------------------------------------------------------------------
 	static void measure( ILog log, final Binary data, final Binary key, CryptoMode mode, final Binary iv )
 	{
-		DES3 des = new DES3( key );
+		DES2_EDE des = new DES2_EDE( key );
 		long t = Ticker.measureMs( ITERATIONS, () ->
 		{
 			Binary crypt = des.encrypt( data, mode, AlignMode.BLOCK, iv );
@@ -91,7 +91,7 @@ public class TestDES3Parts
 			key.random( 2 * BLOCK_SIZE );
 
 			DES3Jce desJce = new DES3Jce( key );
-			DES3 des = new DES3( key );
+			DES2_EDE des = new DES2_EDE( key );
 
 			// данные должны быть выровнены - потому кратно размеру блока
 			if( alignMode == AlignMode.NONE )
@@ -165,7 +165,7 @@ public class TestDES3Parts
 			key.random( 2 * BLOCK_SIZE );
 
 			DES3Jce des_default = new DES3Jce( key );
-			DES3 des_stream = new DES3( key );
+			DES2_EDE des_stream = new DES2_EDE( key );
 
 			// данные должны быть выровнены - потому кратно размеру блока
 			if( alignMode == AlignMode.NONE )
@@ -210,7 +210,7 @@ public class TestDES3Parts
 			key.random( 2 * BLOCK_SIZE );
 
 			DES3Jce des_default = new DES3Jce( key );
-			DES3 des_stream = new DES3( key );
+			DES2_EDE des_stream = new DES2_EDE( key );
 
 			key.random( 2 * BLOCK_SIZE );
 			des_default.setKey( key );

@@ -9,7 +9,7 @@ import org.denom.format.BerTLV;
 import org.denom.crypt.*;
 import org.denom.crypt.hash.SHA1;
 
-import org.denom.card.*;
+import org.denom.smartcard.*;
 
 import static org.denom.Ex.*;
 import static org.denom.Binary.*;
@@ -257,22 +257,16 @@ public class TerminalGP
 	{
 		Binary aid = AID.ISD_VISA_OPENPLATFORM;
 		Cmd( null, ApduIso.SelectAID( aid ), RApdu.ST_ANY );
-		if( !cr.rapdu.isOk() )
-		{
-			aid = AID.ISD_GLOBAL_PLATFORM;
-			Cmd( null, ApduIso.SelectAID( aid ), RApdu.ST_ANY );
-			if( !cr.rapdu.isOk() )
-			{
-				aid = AID.ISD_MASTERCARD;
-				Cmd( null, ApduIso.SelectAID( aid ), RApdu.ST_ANY );
-				if( !cr.rapdu.isOk() )
-				{
-					aid = AID.ISD_UEC;
-					Cmd( null, ApduIso.SelectAID( aid ), RApdu.ST_OK );
-				}
-			}
-		}
+		if( cr.rapdu.isOk() )
+			return aid;
+		
+		aid = AID.ISD_GLOBAL_PLATFORM;
+		Cmd( null, ApduIso.SelectAID( aid ), RApdu.ST_ANY );
+		if( cr.rapdu.isOk() )
+			return aid;
 
+		aid = AID.ISD_MASTERCARD;
+		Cmd( null, ApduIso.SelectAID( aid ), RApdu.ST_OK );
 		return aid;
 	}
 

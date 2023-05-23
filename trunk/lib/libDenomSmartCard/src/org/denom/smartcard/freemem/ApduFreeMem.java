@@ -3,7 +3,7 @@
 
 package org.denom.smartcard.freemem;
 
-import org.denom.card.CApdu;
+import org.denom.smartcard.CApdu;
 import static org.denom.Binary.*;
 
 /**

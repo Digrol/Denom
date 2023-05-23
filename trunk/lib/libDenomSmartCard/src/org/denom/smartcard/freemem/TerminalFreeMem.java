@@ -4,8 +4,8 @@
 package org.denom.smartcard.freemem;
 
 import org.denom.Binary;
-import org.denom.card.*;
-import org.denom.card.gp.*;
+import org.denom.smartcard.*;
+import org.denom.smartcard.gp.*;
 
 /**
  * Использование инстанса JC-апплета FreeMem.

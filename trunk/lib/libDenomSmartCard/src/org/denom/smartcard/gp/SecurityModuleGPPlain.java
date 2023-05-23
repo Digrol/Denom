@@ -5,7 +5,7 @@ package org.denom.smartcard.gp;
 
 import org.denom.*;
 import org.denom.format.*;
-import org.denom.card.CApdu;
+import org.denom.smartcard.CApdu;
 
 import static org.denom.Binary.*;
 import static org.denom.Ex.*;

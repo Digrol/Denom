@@ -4,7 +4,7 @@
 package org.denom.smartcard.gp;
 
 import org.denom.*;
-import org.denom.card.*;
+import org.denom.smartcard.*;
 
 import static org.denom.Binary.Bin;
 

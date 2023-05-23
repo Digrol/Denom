@@ -4,7 +4,7 @@
 package org.denom.smartcard.gp;
 
 import org.denom.Binary;
-import org.denom.card.ISecurityModuleBase;
+import org.denom.smartcard.ISecurityModuleBase;
 
 /**
  * Выработка сессионных ключей для домена GP.

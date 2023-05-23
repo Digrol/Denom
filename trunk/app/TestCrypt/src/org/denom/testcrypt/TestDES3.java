@@ -49,7 +49,7 @@ public class TestDES3
 			data.random( rand.nextInt( 1024 ) + 1 );
 			iv.random( 8 );
 
-			DES3 new_des = new DES3( key );
+			DES2_EDE new_des = new DES2_EDE( key );
 			DES3Jce old_des = new DES3Jce( key );
 
 			Binary new_encrypted = new_des.encrypt( data, mode, AlignMode.BLOCK, iv );
@@ -76,7 +76,7 @@ public class TestDES3
 	// -----------------------------------------------------------------------------------------------------------------
 	private static void measure( final Binary data, final Binary key, CryptoMode mode, final Binary iv )
 	{
-		DES3 des3 = new DES3( key );
+		DES2_EDE des3 = new DES2_EDE( key );
 		long t = Ticker.measureMs( ITERATIONS, () ->
 		{
 			Binary crypt = des3.encrypt( data, mode, AlignMode.BLOCK, iv );
