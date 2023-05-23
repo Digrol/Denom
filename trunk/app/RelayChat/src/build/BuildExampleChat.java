@@ -11,9 +11,10 @@ class BuildExampleChat
 		JarBuilder jb = new JarBuilder( new LogConsole(), "RelayChat.jar" );
 		jb.addDirectory( ".bin" );
 		jb.addDirectory( "../../lib/libDenomCommon/.bin" );
-		jb.addDirectory( "../../lib/libDenomRelay/.bin" );
-		//jb.addZip( "../../../libs/org.denom.crypt-2020.02.16.jar" );
-		jb.addManifest( relaychat.ExampleRelayChat.class );
+		jb.addDirectory( "../../lib/libDenomCrypt/.bin" );
+		jb.addDirectory( "../../lib/libDenomD5/.bin" );
+
+		jb.addManifest( relaychat.ExampleChatMain.class );
 		jb.close();
 
 		ProGuard pg = new ProGuard( log, "../../tools/proguard.jar" );
