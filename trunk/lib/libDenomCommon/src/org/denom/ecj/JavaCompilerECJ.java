@@ -45,7 +45,7 @@ public class JavaCompilerECJ
 	{
 		try
 		{
-			javac = (JavaCompiler)Class.forName( "org.eclipse.jdt.internal.compiler.tool.EclipseCompiler" ).newInstance();
+			javac = (JavaCompiler)Class.forName( "org.eclipse.jdt.internal.compiler.tool.EclipseCompiler" ).getDeclaredConstructor().newInstance();
 		}
 		catch( Throwable ex )
 		{
@@ -127,7 +127,7 @@ public class JavaCompilerECJ
 	{
 		try
 		{
-			return compile( srcFilename ).newInstance();
+			return compile( srcFilename ).getDeclaredConstructor().newInstance();
 		}
 		catch( Exception ex )
 		{

@@ -451,7 +451,23 @@ public final class Binary implements Comparable<Binary>
 		mData[ mSize++ ] = (byte)(i & 0xFF);
 		return this;
 	}
-	
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Добавить в конец массива U24, 3-х-байтовое число в BigEndian.
+	 * Учитываются только 3 младших байта, старший игнорируется.
+	 * @param i - Число.
+	 * @return Cсылка на себя.
+	 */
+	public Binary addU24( int i )
+	{
+		ensureCapacityOptimal( mSize + 3 );
+		mData[ mSize++ ] = (byte)(i >>> 16);
+		mData[ mSize++ ] = (byte)(i >>> 8);
+		mData[ mSize++ ] = (byte)(i & 0xFF);
+		return this;
+	}
+
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Добавить в конец массива int (4 байта) в формате BigEndian.
@@ -1024,13 +1040,40 @@ public final class Binary implements Comparable<Binary>
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * Считать беззнаковое число (short = 2 байта) по смещению {@code offset} в формате BigEndian.
+	 * Записать число {@code value} (3 байта) по смещению {@code offset} в формате BigEndian.
+	 * @param offset - Смещение.
+	 * @param value - Значение (используются младшие 3 байта)
+	 */
+	public void setU24( int offset, int value )
+	{
+		MUST( (offset + 3) <= mSize, "Выход за границы Binary" );
+		mData[ offset++ ] = (byte)(value >>> 16);
+		mData[ offset++ ] = (byte)(value >>> 8);
+		mData[ offset   ] = (byte)(value & 0xFF);
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Считать беззнаковое число (2 байта) по смещению {@code offset} в формате BigEndian.
 	 * @param offset - Смещение
 	 */
 	public int getU16( int offset )
 	{
 		MUST( (offset + 2) <= mSize, "Выход за границы Binary" );
 		return ((mData[ offset ] << 8) | (mData[ offset + 1 ] & 0xFF)) & 0xFFFF;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Считать беззнаковое число (3 байта) по смещению {@code offset} в формате BigEndian.
+	 * @param offset - Смещение
+	 */
+	public int getU24( int offset )
+	{
+		MUST( (offset + 3) <= mSize, "Выход за границы Binary" );
+		return (((mData[ offset    ] & 0xFF) << 16)
+			 | ((mData[ offset + 1 ] & 0xFF) << 8)
+			 |  (mData[ offset + 2 ] & 0xFF)) & 0x00FFFFFF;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

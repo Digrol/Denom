@@ -205,7 +205,7 @@ public class BinParser
 			int size = bin.getIntBE( offset );
 			offset += 4;
 
-			instance = clazz.newInstance();
+			instance = clazz.getDeclaredConstructor().newInstance();
 			instance.fromBin( bin, offset );
 			offset += size;
 		}

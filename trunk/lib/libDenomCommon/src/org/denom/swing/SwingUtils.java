@@ -25,7 +25,7 @@ import static org.denom.Ex.*;
  */
 public class SwingUtils
 {
-	public static final Font DEFAULT_FONT = new Font( "Consolas", Font.PLAIN, 14 );
+	public static final Font DEFAULT_FONT = new Font( "Consolas", Font.PLAIN, 16 );
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**

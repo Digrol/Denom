@@ -41,7 +41,7 @@ public class HttpRequest
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * @param url - URL (напр. 'http://demo.sls.team')
+	 * @param url - URL (напр. 'http://myhost.org')
 	 * @param method - метод запроса (напр. POST, GET и т.п.)
 	 */
 	public HttpRequest( String url, String method )

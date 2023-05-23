@@ -70,6 +70,12 @@ public class Ex extends RuntimeException
 		super( message, cause );
 	}
 
+	public Ex( int errorCode, String message, Throwable cause )
+	{
+		super( message, cause );
+		this.code = errorCode;
+	}
+
 	/**
 	 * @param cause - caught Exception.
 	 */
@@ -167,17 +173,9 @@ public class Ex extends RuntimeException
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	/**
-	 * Get description of error as String (with call stack).
-	 * MUST and THROW is not written in stack.
-	 */
-	public static String getErrorDescription( Throwable ex )
+	public static String getStackStr( Throwable ex )
 	{
 		StringBuilder str = new StringBuilder( 1000 );
-		str.append( ex.toString() );
-
-		str.append( ln );
-		str.append( "Stack:" );
 
 		StackTraceElement[] stack = ex.getStackTrace();
 		for( int i = 0; i < stack.length; ++i )
@@ -190,6 +188,22 @@ public class Ex extends RuntimeException
 			str.append( "    " );
 			str.append( stack[i].toString() );
 		}
+		return str.toString();
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Get description of error as String (with call stack).
+	 * MUST and THROW is not written in stack.
+	 */
+	public static String getErrorDescription( Throwable ex )
+	{
+		StringBuilder str = new StringBuilder( 1000 );
+		str.append( ex.toString() );
+
+		str.append( ln );
+		str.append( "Stack:" );
+		str.append( getStackStr( ex ) );
 		return str.toString();
 	}
 

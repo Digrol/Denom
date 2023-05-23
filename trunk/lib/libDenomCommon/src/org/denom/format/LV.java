@@ -76,6 +76,58 @@ public final class LV
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
+	 * @return Len (U8) | value.
+	 */
+	public static Binary LV1( final Binary value )
+	{
+		MUST( Int.isU8( value.size() ), "Too long Value for LV1" );
+		Binary res = new Binary().reserve( value.size() + 1 );
+		res.add( value.size() );
+		res.add( value );
+		return res;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * @return Len (U16) | value.
+	 */
+	public static Binary LV2( final Binary value )
+	{
+		MUST( Int.isU16( value.size() ), "Too long Value for LV2" );
+		Binary res = new Binary().reserve( value.size() + 2 );
+		res.addU16( value.size() );
+		res.add( value );
+		return res;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * @return Len (U24) | value.
+	 */
+	public static Binary LV3( final Binary value )
+	{
+		MUST( Int.isU24( value.size() ), "Too long Value for LV3" );
+		Binary res = new Binary().reserve( value.size() + 3 );
+		res.addU24( value.size() );
+		res.add( value );
+		return res;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * @return Len (U32) | value.
+	 */
+	public static Binary LV4( final Binary value )
+	{
+		MUST( Int.isU24( value.size() ), "Too long Value for LV4" );
+		Binary res = new Binary().reserve( value.size() + 4 );
+		res.addInt( value.size() );
+		res.add( value );
+		return res;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
 	 * Сериализовать список строк в список LV4-записей.
 	 * Строки кодируются в UTF-8.
 	 * @return список LV-записей.

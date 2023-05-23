@@ -1267,7 +1267,7 @@ public class JSONObject {
 	 */
 	public JSONObject put( String key, double value )
 	{
-		this.put( key, new Double( value ) );
+		this.put( key, Double.valueOf( value ) );
 		return this;
 	}
 
@@ -1281,7 +1281,7 @@ public class JSONObject {
 	 */
 	public JSONObject put( String key, int value )
 	{
-		this.put( key, new Integer( value ) );
+		this.put( key, Integer.valueOf( value ) );
 		return this;
 	}
 
@@ -1295,7 +1295,7 @@ public class JSONObject {
 	 */
 	public JSONObject put( String key, long value )
 	{
-		this.put( key, new Long( value ) );
+		this.put( key, Long.valueOf( value ) );
 		return this;
 	}
 
@@ -1536,7 +1536,7 @@ public class JSONObject {
 				}
 				else
 				{
-					Long myLong = new Long( string );
+					Long myLong = Long.valueOf( string );
 					if( string.equals( myLong.toString() ) )
 					{
 						if( myLong.longValue() == myLong.intValue() )
