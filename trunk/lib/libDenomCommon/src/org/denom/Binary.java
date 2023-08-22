@@ -1345,7 +1345,7 @@ public final class Binary implements Comparable<Binary>
 	/**
 	 * Декрементировать массив на 1.<br>
 	 * Содержимое массива интерпретируется как беззнаковое целое в формате BigEndian.
-	 * @return ссылка на себя.
+	 * @return this.
 	 */
 	public Binary decrement()
 	{
@@ -1360,6 +1360,21 @@ public final class Binary implements Comparable<Binary>
 		}
 		while( (i != 0) && (get( i ) == 0xFF) );
 		
+		return this;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Поменять местами нибблы в каждом байте.
+	 * @return this.
+	 */
+	public Binary nibbleSwap()
+	{
+		for( int i = 0; i < mSize; ++i )
+		{
+			int b = mData[ i ] & 0xFF;
+			mData[ i ] = (byte)((b >>> 4) | (b << 4));
+		}
 		return this;
 	}
 

@@ -110,10 +110,15 @@ public class SocketClient implements AutoCloseable
 	 */
 	public void connect( String host, int port )
 	{
+		connect( new InetSocketAddress( host.isEmpty() ? "0.0.0.0" : host, port ) );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public void connect( InetSocketAddress addr )
+	{
 		try
 		{
-			host = host.isEmpty() ? "0.0.0.0" : host;
-			socket.connect( new InetSocketAddress( host, port ), connectTimeoutMs );
+			socket.connect( addr, connectTimeoutMs );
 		}
 		catch( IOException ex )
 		{
@@ -226,11 +231,16 @@ public class SocketClient implements AutoCloseable
 			while( bb.hasRemaining() )
 			{
 				int size = wrappedChannel.read( bb );
-				MUST( size > 0, "Server closed connection" );
+				if( size <= 0 )
+				{
+					close();
+					THROW( "Connection closed" );
+				}
 			}
 		}
 		catch( Throwable ex )
 		{
+			close();
 			THROW( ex );
 		}
 	}
@@ -255,7 +265,11 @@ public class SocketClient implements AutoCloseable
 		try
 		{
 			int size = socketChannel.read( bb );
-			MUST( size > 0, "Server closed connection" );
+			if( size <= 0 )
+			{
+				close();
+				THROW( "Connection closed" );
+			}
 			buf.resize( oldSize + size );
 		}
 		catch( Throwable ex )

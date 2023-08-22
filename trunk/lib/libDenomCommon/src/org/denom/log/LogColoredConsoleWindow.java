@@ -178,10 +178,4 @@ public class LogColoredConsoleWindow implements ILog
 		consoleWindow.dispose();
 	}
 
-	// -----------------------------------------------------------------------------------------------------------------
-	@Override
-	protected void finalize()
-	{
-		close();
-	}
 }

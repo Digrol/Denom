@@ -100,4 +100,14 @@ public class Int
 		return ((number + modulo - 1) / modulo) * modulo;
 	}
 
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Меняет местами ниблы в младшем байте старший и младший.
+	 * @param aByte должен быть задан только младший байт
+	 */
+	public static int swapNibble( int aByte )
+	{
+		Ex.MUST( isU8( aByte ), "swapNibble: Wrong param " );
+		return (aByte >>> 4) | (aByte << 4);
+	}
 }

@@ -75,7 +75,7 @@ public class LogColoredTextPane extends JTextPane implements ILog
 		this.isGUIApp = isGUIApp;
 
 		setDefaultColor( defaultTextColor );
-		setMaxTextCapacity( 100000 );
+		setMaxTextCapacity( 1000000 );
 
 		setBackground( new Color( backgroundColor, true ) );
 		setEditable( false );

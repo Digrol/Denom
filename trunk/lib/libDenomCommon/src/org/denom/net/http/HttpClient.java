@@ -105,7 +105,7 @@ public class HttpClient
 
 		try
 		{
-			HttpURLConnection connection = (HttpURLConnection)new URL( url ).openConnection( Proxy.NO_PROXY );
+			HttpURLConnection connection = (HttpURLConnection)(new URI( url ).toURL()).openConnection( Proxy.NO_PROXY );
 
 			if( (sslSocketFactory != null ) && (connection instanceof HttpsURLConnection) )
 			{
@@ -187,7 +187,7 @@ public class HttpClient
 
 			return new HttpResponse( responseCode, responseMessage, connection.getHeaderFields(), responseData );
 		}
-		catch( IOException ex )
+		catch( Throwable ex )
 		{
 			THROW( ex );
 			return null;

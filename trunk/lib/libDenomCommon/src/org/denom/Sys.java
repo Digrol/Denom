@@ -7,8 +7,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.*;
 
 import org.denom.log.ILog;
@@ -71,7 +70,7 @@ public final class Sys
 	{
 		try
 		{
-			return Runtime.getRuntime().exec( cmdLine ).waitFor();
+			return new ProcessBuilder( cmdLine ).start().waitFor();
 		}
 		catch( InterruptedException e )
 		{
@@ -191,6 +190,74 @@ public final class Sys
 	public static void checkFileExist( String fileName )
 	{
 		MUST( Files.exists( Paths.get( fileName ) ), "File '" + fileName + "' not found" );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	private static Path tempDirJni = null;
+	/**
+	 * Загрузить DLL-ку из JAR-файла.
+	 * JAR, содержащий DLL, должен быть в classpath.
+	 * @param path Путь к DLL-файлу внутри JAR.
+	 * DLL копируется во временный каталог, который будет удалён при закрытии приложения.
+	 */
+	public static void loadLibraryFromJar( String path )
+	{
+		try
+		{
+			// Каталог для временных JNI-файлов.
+			if( tempDirJni == null )
+			{
+				String tempDir = System.getProperty( "java.io.tmpdir" );
+				tempDirJni = Files.createDirectories( Paths.get( tempDir, "denom_jni_temp" + System.nanoTime() ) );
+				MUST( tempDirJni != null, "Can't create temp directory: " + tempDirJni.toString() );
+				tempDirJni.toFile().deleteOnExit();
+			}
+	
+			Path tempFileName = Paths.get( tempDirJni.toString(), Paths.get( path ).getFileName().toString() );
+	
+			try( InputStream is = ClassLoader.getSystemResourceAsStream( path ) )
+			{
+				Files.copy( is, tempFileName, StandardCopyOption.REPLACE_EXISTING );
+			}
+			catch( Throwable ex )
+			{
+				Files.deleteIfExists( tempFileName );
+				THROW( ex.toString() );
+			}
+	
+			try
+			{
+				System.load( tempFileName.toAbsolutePath().toString() );
+			}
+			finally
+			{
+				if( isPosixCompliant() )
+				{	// Assume POSIX compliant file system, can be deleted after loading
+					Files.deleteIfExists( tempFileName );
+				}
+				else
+				{	// Assume non-POSIX, and don't delete until last file descriptor closed
+					tempFileName.toFile().deleteOnExit();
+				}
+			}
+		}
+		catch (Throwable ex)
+		{
+			THROW( ex.toString() );
+		}
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	private static boolean isPosixCompliant()
+	{
+		try
+		{
+			return FileSystems.getDefault().supportedFileAttributeViews().contains( "posix" );
+		}
+		catch( FileSystemNotFoundException | ProviderNotFoundException | SecurityException e )
+		{
+			return false;
+		}
 	}
 
 }

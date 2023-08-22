@@ -106,6 +106,7 @@ public class ProGuard
 		sb.append( " -allowaccessmodification" );
 		sb.append( " -forceprocessing" );
 		sb.append( " -dontnote org.denom.ecj.JavaCompilerECJ" );
+		sb.append( " -dontnote org.denom.format.BinParser" );
 
 		return sb.toString();
 	}
@@ -150,6 +151,7 @@ public class ProGuard
 		sb.append( " -dontoptimize" );
 		sb.append( " -forceprocessing" );
 		sb.append( " -dontnote org.denom.ecj.JavaCompilerECJ" );
+		sb.append( " -dontnote org.denom.format.BinParser" );
 		return sb.toString();
 	}
 

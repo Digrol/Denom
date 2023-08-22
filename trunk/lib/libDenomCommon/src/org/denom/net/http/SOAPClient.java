@@ -48,11 +48,11 @@ public class SOAPClient
 		this.serviceNamespace = serviceNamespace;
 		try
 		{
-			this.serviceURL = new URL( serviceURL );
+			this.serviceURL = new URI( serviceURL ).toURL();
 		}
-		catch( MalformedURLException e )
+		catch( Throwable ex )
 		{
-			THROW( e.toString() );
+			THROW( ex.toString() );
 		}
 		this.httpClient = new HttpClient().setSslSocketFactory( sslSocketFactory );
 	}
