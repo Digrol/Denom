@@ -17,6 +17,9 @@ public class AES extends ABlockCipher
 {
 	public static final int BLOCK_SIZE = 16;
 
+	Binary k1; // for CMAC generation
+	Binary k2;
+
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Конструктор. Ключ задать позже.
@@ -77,6 +80,9 @@ public class AES extends ABlockCipher
 		rdk = new int[ Nw ];
 		expandKey( m_key );
 		invertKey();
+
+		k1 = null;
+		k2 = null;
 
 		return this;
 	}
@@ -828,4 +834,87 @@ public class AES extends ABlockCipher
 		block_arr[ 15 ] = (byte)(Sd[ (t0       ) & 0xff ] ^ (v));
 	}
 
+	// -----------------------------------------------------------------------------------------------------------------
+	private static void CMAC_SHL( Binary K )
+	{
+		byte[] k = K.getDataRef();
+		int tmp;
+		byte nextBit = 0;
+
+		for( int i = 15; i >= 0; i-- )
+		{
+			tmp = k[ i ] & 0xFF;
+			k[ i ] = (byte)((tmp << 1) | nextBit);
+			nextBit = (byte)(tmp >> 7);
+		}
+		k[ 15 ] ^= (byte)(0x87 & (-nextBit));
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	private void CMAC_calcK1K2()
+	{
+		Binary K = Bin(16);
+
+		encryptBlock( K );
+		CMAC_SHL( K ); // k1
+		k1 = K.clone();
+		CMAC_SHL( K ); // K2
+		k2 = K;
+	}
+	
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * SP 800-38B. Recommendation for Block Cipher Modes of Operation: the CMAC Mode for Authentication.
+	 * https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-38B.pdf .
+	 * The Key must already be set.
+	 * @param data
+	 * @param iv - IV or null.
+	 * @return CMAC [16 bytes].
+	 */
+	public Binary calcCMAC( Binary data, Binary iv )
+	{
+		if( k1 == null )
+			CMAC_calcK1K2();
+		
+		Binary prev = Bin( BLOCK_SIZE );
+		if( iv != null )
+		{
+			MUST( iv.size() == BLOCK_SIZE, "Wrong IV length" );
+			prev = iv.clone();
+		}
+
+		// the number of blocks including any final partial block
+		int numDataBlocks = ( data.size() + BLOCK_SIZE - 1 ) / BLOCK_SIZE;
+
+		// process all data blocks (encrypt in CBC mode), except last block
+		int offset = 0;
+		for( int i = 1; i < numDataBlocks; i++ )
+		{
+			// XOR with prev ciphered data
+			for( int j = 0; j < BLOCK_SIZE; ++j )
+			{
+				byte b = (byte)(prev.get( j ) ^ data.get( offset + j ));
+				prev.set( j, b );
+			}
+
+			offset += BLOCK_SIZE;
+			encryptBlock( prev );
+		}
+
+		Binary last = data.slice( offset, data.size() - offset );
+
+		Binary k = k1;
+		if( last.size() != BLOCK_SIZE )
+		{
+			Crypt.pad( last, BLOCK_SIZE, AlignMode.BLOCK );
+			k = k2;
+		}
+
+		last.xor( k );
+		last.xor( prev );
+		encryptBlock( last );
+
+		return last;
+	}
+	
 }

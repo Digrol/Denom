@@ -84,6 +84,38 @@ public final class Sys
 		return 0;
 	}
 
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public static int execAndWait( String execFile, String... cmdArgs )
+	{
+		List<String> args = new ArrayList<>( cmdArgs.length + 1 );
+		args.add( execFile );
+		for( String arg : cmdArgs )
+			args.add( arg );
+		return execAndWait( args );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public static int execAndWait( List<String> cmdArgs )
+	{
+		try
+		{
+			ProcessBuilder processBuilder = new ProcessBuilder( cmdArgs );
+			processBuilder.redirectErrorStream( true );
+			processBuilder.redirectOutput( ProcessBuilder.Redirect.INHERIT );
+			return processBuilder.start().waitFor();
+		}
+		catch( InterruptedException e )
+		{
+			Thread.currentThread().interrupt();
+			throw new RuntimeException( "Executing process with cmdLine '" + cmdArgs + "' is interrupted" );
+		}
+		catch( Throwable ex )
+		{
+			throw new RuntimeException( ex );
+		}
+	}
+
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Запустить дочерний процесс и дождаться его завершения.
@@ -260,4 +292,23 @@ public final class Sys
 		}
 	}
 
+	// -----------------------------------------------------------------------------------------------------------------
+	public static void deleteFile( String fileOrDir )
+	{
+		deleteFile( Paths.get( fileOrDir ) );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// Delete file or directory with all sub dirs and files
+	public static void deleteFile( Path fileOrDir )
+	{
+		try
+		{
+			if( Files.isDirectory( fileOrDir ) ) 
+				Files.walk( fileOrDir ).sorted( Comparator.reverseOrder() ).map( Path::toFile ).forEach( File::delete );
+			else
+				Files.deleteIfExists( fileOrDir );
+		}
+		catch( Throwable ex ) { throw new RuntimeException( ex ); }
+	}
 }

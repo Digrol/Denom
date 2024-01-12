@@ -172,7 +172,7 @@ public class BerTLVList
 			StringBuilder str = new StringBuilder( 200 );
 			str.append( offset_arr );
 			str.append( "    " );
-			str.append( rec.value.Hex( 1, 8, 16, 0 ) );
+			str.append( rec.value.Hex( 1, 8, 32, 0 ) );
 
 			for( int k = 0; k < str.length(); ++k )
 			{

@@ -1480,6 +1480,50 @@ public final class Binary implements Comparable<Binary>
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
+	 * Найти в массиве заданный байт.
+	 * @param startFrom - начиная с какого элемента в текущем массиве ищем.
+	 * @return индекс элемента, либо -1, если байт не найден
+	 */
+	public int indexOf( int b, int startFrom )
+	{
+		MUST( startFrom >= 0, "Binary: negative offset" );
+
+		for( int i = startFrom; i < mSize; ++i )
+			if( mData[ i ] == b )
+				return i;
+		return -1;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Найти подмассив в массиве.
+	 * @param startFrom - начиная с какого элемента в текущем массиве ищем.
+	 * @return индекс элемента, начиная с которого массив содержит subArray, либо -1, если вхождение не найдено.
+	 */
+	public int indexOf( final Binary subArray, int startFrom )
+	{
+		MUST( startFrom >= 0, "Binary: negative offset" );
+
+		int subSize = subArray.size();
+
+		if( mSize < subSize )
+			return -1;
+
+		int endOffset = mSize - subSize;
+
+		outer:
+		for( int offs = startFrom; offs <= endOffset; ++offs )
+		{
+			for( int i = 0; i < subSize; ++i )
+				if( mData[offs + i] != subArray.mData[ i ] )
+					continue outer;
+			return offs;
+		}
+		return -1;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
 	 * Загрузить из файла данные как массив байт. Данные массива заменятся загруженными.
 	 */
 	public Binary loadFromFile( String fileName )

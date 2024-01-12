@@ -95,7 +95,65 @@ public class TestAES
 	
 		measure( data, key, CryptoMode.CBC, iv );
 
+		checkCMAC();
+		
 		log.writeln( "TestAES - OK" );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// SP 800-38B - Recommendation for Block Cipher Modes of Operation: The CMAC Mode for Authentication
+	// https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Standards-and-Guidelines/documents/examples/AES_CMAC.pdf
+	void checkCMAC()
+	{
+		// 64 bytes for all test cases
+		Binary testData = Bin("6B C1 BE E2  2E 40 9F 96  E9 3D 7E 11  73 93 17 2A"
+							+ "AE 2D 8A 57  1E 03 AC 9C  9E B7 6F AC  45 AF 8E 51"
+							+ "30 C8 1C 46  A3 5C E4 11  E5 FB C1 19  1A 0A 52 EF"
+							+ "F6 9F 24 45  DF 4F 9B 17  AD 2B 41 7B  E6 6C 37 10" );
+
+		//------------------------------------------------------------------
+		// Test Key - 128 bit
+		Binary key = Bin("2B7E1516 28AED2A6 ABF71588 09CF4F3C");
+		// Example #1
+		checkCMAC( key, testData.first(  0 ), null, Bin("BB1D6929 E9593728 7FA37D12 9B756746") );
+		// Example #2
+		checkCMAC( key, testData.first( 16 ), null, Bin("070A16B4 6B4D4144 F79BDD9D D04A287C") );
+		// Example #3
+		checkCMAC( key, testData.first( 20 ), null, Bin("7D85449E A6EA19C8 23A7BF78 837DFADE") );
+		// Example #4
+		checkCMAC( key, testData.first( 64 ), null, Bin("51F0BEBF 7E3B9D92 FC497417 79363CFE") );
+
+		//------------------------------------------------------------------
+		// Test key - 192 bit
+		key = Bin("8E73B0F7 DA0E6452 C810F32B 809079E5 62F8EAD2 522C6B7B");
+
+		// Example #1
+		checkCMAC( key, testData.first(  0 ), null, Bin("D17DDF46 ADAACDE5 31CAC483 DE7A9367") );
+		// Example #2
+		checkCMAC( key, testData.first( 16 ), null, Bin("9E99A7BF 31E71090 0662F65E 617C5184") );
+		// Example #3
+		checkCMAC( key, testData.first( 20 ), null, Bin("3D75C194 ED960704 44A9FA7E C740ECF8") );
+		// Example #4
+		checkCMAC( key, testData.first( 64 ), null, Bin("A1D5DF0E ED790F79 4D775896 59F39A11") );
+
+		//------------------------------------------------------------------
+		// Test key - 256 bit
+		key = Bin("603DEB10 15CA71BE 2B73AEF0 857D7781 1F352C07 3B6108D7 2D9810A3 0914DFF4");
+
+		// Example #1
+		checkCMAC( key, testData.first(  0 ), null, Bin("028962F6 1B7BF89E FC6B551F 4667D983") );
+		// Example #2
+		checkCMAC( key, testData.first( 16 ), null, Bin("28A7023F 452E8F82 BD4BF28D 8C37C35C") );
+		// Example #3
+		checkCMAC( key, testData.first( 20 ), null, Bin("156727DC 0878944A 023C1FE0 3BAD6D93") );
+		// Example #4
+		checkCMAC( key, testData.first( 64 ), null, Bin("E1992190 549F6ED5 696A2C05 6C315410") );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	private static void checkCMAC( Binary key, Binary data, Binary iv, Binary cmac )
+	{
+		MUST( new AES( key ).calcCMAC( data, iv ).equals( cmac ), "Wrong CMAC" );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

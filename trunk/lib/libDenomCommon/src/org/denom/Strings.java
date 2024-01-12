@@ -78,17 +78,14 @@ public class Strings
 	 */
 	public static String PadLeft( String str, int reqLen, char symbol )
 	{
-		Ex.MUST( str.length() <= reqLen, "Длина строки больше требуемого размера" );
-
-		if( str.length() == reqLen )
-		{
+		if( str.length() >= reqLen )
 			return str;
-		}
 
 		char[] padded = new char[ reqLen ];
 		int padLen = reqLen - str.length();
 		Arrays.fill( padded, 0, padLen, symbol );
 		str.getChars( 0, str.length(), padded, padLen );
+
 		return new String( padded );
 	}
 
@@ -101,12 +98,8 @@ public class Strings
 	 */
 	public static String PadRight( String str, int reqLen, char symbol )
 	{
-		Ex.MUST( str.length() <= reqLen, "Длина строки больше требуемого размера" );
-
-		if( str.length() == reqLen )
-		{
+		if( str.length() >= reqLen )
 			return str;
-		}
 
 		char[] padded = new char[ reqLen ];
 		str.getChars( 0, str.length(), padded, 0 );
