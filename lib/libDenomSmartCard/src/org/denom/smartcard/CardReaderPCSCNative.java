@@ -3,10 +3,9 @@
 
 package org.denom.smartcard;
 
-import java.nio.file.Paths;
+import java.nio.file.*;
 
-import org.denom.Binary;
-import org.denom.Strings;
+import org.denom.*;
 
 import static org.denom.Ex.*;
 
@@ -15,24 +14,45 @@ import static org.denom.Ex.*;
  */
 public class CardReaderPCSCNative extends CardReader
 {
+	String PATH_IN_JAR = "bin/CardReaderPCSCNativeJNI.dll";
 	private String curReaderName = null;
 	private boolean cardPowered = false;
 
 	private static boolean dllLoaded = false;
 
 	// -----------------------------------------------------------------------------------------------------------------
-	public CardReaderPCSCNative()
+	/**
+	 * Загрузка библиотеки по указанному пути на дисках.
+	 * @param dllFilePath Например, Paths.get("../../~build/x64_Debug/CardReaderPCSCNativeJNI.dll")
+	 * если путь пустой или null, то ищем библиотеку внутри jar-файлов, либо в каталогах PATH.
+	 */
+	public CardReaderPCSCNative( String path )
 	{
-		this( "CardReaderPCSCNativeJNI.dll" );
-	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	public CardReaderPCSCNative( String dllPath )
-	{
-		if( !dllLoaded )
+		synchronized( CardReaderPCSCNative.class )
 		{
-			String absPath = Paths.get( dllPath ).toAbsolutePath().toString();
-			System.load( absPath );
+			if( !dllLoaded )
+			{
+				if( (path != null) && !path.isEmpty() )
+				{
+					System.load( Paths.get( path ).toAbsolutePath().toString() );
+				}
+				else
+				{
+					// Проблема - не удаляет временную распакованную DLL, засоряет диск
+					try
+					{
+						// Загрузка библиотеки из jar-файла. JAR, содержащий DLL, должен быть в classpath.
+						Sys.loadLibraryFromJar( PATH_IN_JAR );
+					}
+					catch( Throwable ex )
+					{
+						// Загрузка библиотеки в зависимости от платформы. Библиотека ищется по каталогам, указанным в PATH.
+						// Для Windows - попытается найти CardReaderPCSCNativeJNI.dll.
+						System.loadLibrary( "CardReaderPCSCNativeJNI" );
+					}
+				}
+				dllLoaded = true;
+			}
 		}
 	}
 
@@ -168,19 +188,24 @@ public class CardReaderPCSCNative extends CardReader
 
 		if( isTransportLog )
 		{
-			transportLog.writeln( "        Command APDU:" );
-			transportLog.writeln( capdu.toBin().Hex( 1, 8, 16, 8 ) );
+			transportLog.writeln( " -> " + capdu.toBin().Hex( 1, 8, 0, 0 ) );
 		}
 
 		byte[] rapduArr = transmitNative( capdu.toBin().getBytes() );
 
 		if( isTransportLog )
 		{
-			transportLog.writeln( "        Response APDU:" );
-			transportLog.writeln( new Binary( rapduArr ).Hex( 1, 8, 16, 8 ) );
+			transportLog.writeln( " <- " + new Binary( rapduArr ).Hex( 1, 8, 0, 0 ) );
 		}
 
 		return new RApdu( rapduArr );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public CardReaderChannel getCardChannel( int logicalChannel )
+	{
+		return new CardReaderChannel( this, logicalChannel );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

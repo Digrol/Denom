@@ -38,7 +38,7 @@ public class DialogConfirm extends JDialog
 	 */
 	public DialogConfirm( JFrame parent, String title, JComponent content, boolean resizable )
 	{
-		this( parent, title, content, resizable, "ОК", "Отмена" );
+		this( parent, title, content, resizable, "OK", "Cancel" );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

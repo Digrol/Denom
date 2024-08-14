@@ -6,7 +6,10 @@ package org.denom.smartcard.gp;
 import java.io.*;
 import java.util.*;
 import java.util.zip.*;
+
+import org.denom.Arr;
 import org.denom.Binary;
+import org.denom.smartcard.CApdu;
 
 import static org.denom.Ex.*;
 import static org.denom.Binary.Bin;
@@ -135,6 +138,36 @@ public class JC_Cap
 		}
 
 		return packageCap;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Возвращает список CApdu для загрузки данного CAP-файла в карту.
+	 * @param sdAID - AID домена, может быть пустым.
+	 * @param capHash - Хеш CAP-файла, может быть пустым.
+	 * @return
+	 */
+	public Arr<CApdu> getCApdus( final Binary sdAID, final Binary capHash )
+	{
+		Arr<CApdu> arr = new Arr<>();
+
+		Binary data = toBinary( false );
+		int size = data.size();
+
+		arr.add( ApduGP.InstallForLoad( packageAID, sdAID, capHash ) );
+
+		for( int blockNum = 0, offset = 0; offset < size; ++blockNum )
+		{
+			int partSize = Math.min( 250, size - offset );
+			Binary part = data.slice( offset, partSize );
+			offset += partSize;
+
+			if( blockNum == 0 )
+				arr.add( ApduGP.LoadFirstBlock( size, part, Bin() ) );
+			else
+				arr.add( ApduGP.LoadNextBlock( blockNum, part, offset == size ) );
+		}
+		return arr;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

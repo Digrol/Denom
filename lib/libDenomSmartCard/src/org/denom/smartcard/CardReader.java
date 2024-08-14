@@ -7,19 +7,19 @@ import org.denom.*;
 import org.denom.log.*;
 
 /**
- * Абстрактный считыватель (ридер) смарт-карт.
- * Наследники реализуют конкретный транспорт до ридера, например PC/SC, Socket, AndroidNFC.
- * 
- * Пример использования:
+ * Abstract smart card reader (reader).
+ * Descendants implement a specific transport to the reader, e.g. PC/SC, Socket, AndroidNFC.
+ *
+ * Example Usage:
  * CardReader cr = new CardReader***().setApduLog( apduLog );
  * cr.connect( "reader name" );
  * cr.powerOn();
- * cr.Cmd( myApduHelper(...) ); // Проверяется статус выполнения команды
+ * cr.Cmd( myApduHelper(...) ); // Checks the status of command execution
  * cr.powerOff();
  * cr.close();
  * 
- * Метод 'transmit' НЕ проверяет статус выполнения команды картой, в Apdu log не пишет.
- * Только использование транспорта напрямую.
+ * The 'transmit' method does NOT check the status of command execution by the card, it does not write to Apdu log.
+ * Only using transport directly.
  */
 public abstract class CardReader implements AutoCloseable
 {
@@ -58,17 +58,15 @@ public abstract class CardReader implements AutoCloseable
 	// =================================================================================================================
 
 	protected ILog transportLog = null;
-	// Флаг наличия объекта-лога, для оптимизации
+	// Flag the presence of a log object, for optimization
 	protected boolean isTransportLog;
 
-	protected ILog apduLog;
-	
-	protected ISM mSM = null;
+	protected ISM sm = null;
 
-	private Ticker ticker = new Ticker();
+	protected Ticker ticker = new Ticker();
 
 	private final String thisClassName = CardReader.class.getName();
-	private IApduLogger apduLogger = new APDULoggerNothing();
+	protected IApduLogger apduLogger = new ApduLoggerDummy();
 
 	// =================================================================================================================
 
@@ -77,8 +75,8 @@ public abstract class CardReader implements AutoCloseable
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * Задать лог для логирования транспортного уровня.
-	 * null или LogDummy - не логировать.
+	 * Specify a log for transport layer logging.
+	 * null or LogDummy - do not log.
 	 */
 	public CardReader setTransportLog( ILog log )
 	{
@@ -88,28 +86,24 @@ public abstract class CardReader implements AutoCloseable
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	public final ILog getTransportLog()
+	public ILog getTransportLog()
 	{
 		return transportLog;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	/**
-	 * Задать лог для логирования APDU.
-	 * null или LogDummy - не логировать.
-	 */
-	public final CardReader setApduLog( ILog log )
+	public CardReader setApduLogger( IApduLogger logger )
 	{
-		this.apduLog = log;
-		apduLogger = (log != null) && !(log instanceof LogDummy) ?
-				new APDULoggerTypical( log ) : new APDULoggerNothing();
+		this.apduLogger = logger;
+		if( apduLogger == null )
+			apduLogger = new ApduLoggerDummy();
 		return this;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	public final ILog getApduLog()
+	public IApduLogger getApduLogger()
 	{
-		return apduLog;
+		return apduLogger;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -181,7 +175,7 @@ public abstract class CardReader implements AutoCloseable
 	 * Подать питание на карту.
 	 * @return - ответ карты (ATR).
 	 */
-	public final Binary powerOn()
+	public Binary powerOn()
 	{
 		apduLogger.printPowerOn();
 		atr = powerOnImpl();
@@ -193,7 +187,7 @@ public abstract class CardReader implements AutoCloseable
 	/**
 	 * Снять питание с карты.
 	 */
-	public final void powerOff()
+	public void powerOff()
 	{
 		apduLogger.printPowerOff();
 		powerOffImpl();
@@ -204,7 +198,7 @@ public abstract class CardReader implements AutoCloseable
 	 * powerOff и powerOn
 	 * @return - ответ карты (ATR).
 	 */
-	public final Binary reset()
+	public Binary reset()
 	{
 		apduLogger.printReset();
 		atr = resetImpl();
@@ -222,6 +216,15 @@ public abstract class CardReader implements AutoCloseable
 	 */
 	public abstract RApdu transmit( CApdu capdu );
 
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Возвращает декоратор для добавления номера логического канала в каждой CApdu.
+	 * @param logicalChannel 0..19.
+	 * Типичная имплементация должна быть такой: return new CardReaderChannel( this, logicalChannel );
+	 * При реализации метода у потомков в retrun value будет задан тип потомка. 
+	 */
+	public abstract CardReader getCardChannel( int logicalChannel );
+
 	// =================================================================================================================
 	// Методы Cmd проверяют ожидаемый статус, логируют CApdu и RApdu, накладывают SM, замеряется время выполнения команд.
 	// Последнее RApdu запоминаятся в полях this.rapdu, this.resp.
@@ -236,7 +239,7 @@ public abstract class CardReader implements AutoCloseable
 	 */
 	public final RApdu Cmd( CApdu capdu, int expectedStatus )
 	{
-		return Cmd( mSM, capdu, expectedStatus );
+		return Cmd( this.sm, capdu, expectedStatus );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -288,7 +291,7 @@ public abstract class CardReader implements AutoCloseable
 	 * @param expectedStatus - Ожидаемый статус, см. также RApdu.ST*.
 	 *     Если статус не соответствует ожидаемому - исключение.
 	 */
-	public final RApdu Cmd( ISM sm, CApdu capdu, int expectedStatus )
+	public RApdu Cmd( ISM sm, CApdu capdu, int expectedStatus )
 	{
 		String callClassName = (callerClassName == null) ? thisClassName : callerClassName;
 		callerClassName = null;
@@ -296,19 +299,19 @@ public abstract class CardReader implements AutoCloseable
 		apduLogger.printBeforeCommand( capdu, callClassName );
 
 		boolean isTlvData = capdu.isTlvData;
-		if( sm != null ) // Зашифровать
+		if( sm != null ) // Encrypt
 		{
 			capdu = sm.encryptCommand( capdu );
 			apduLogger.printCApduSM( capdu );
 		}
 
 		ticker.restart();
-		rapdu = transmit( capdu ); // Выполнение команды
+		rapdu = transmit( capdu ); // Execute command
 		resp = rapdu.response;
 		cmdTime = ticker.getDiffMs();
 		sumTime += cmdTime;
 
-		if( sm != null ) // Расшифровать
+		if( sm != null ) // Decrypt
 		{
 			apduLogger.printRApduSM( rapdu, false );
 			if( rapdu.isOk() )
@@ -343,7 +346,7 @@ public abstract class CardReader implements AutoCloseable
 	 */
 	public final void setSM( ISM sm )
 	{
-		mSM = sm;
+		this.sm = sm;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -352,7 +355,7 @@ public abstract class CardReader implements AutoCloseable
 	 */
 	public final ISM getSM()
 	{
-		return mSM;
+		return this.sm;
 	}
 	
 	// -----------------------------------------------------------------------------------------------------------------
@@ -361,96 +364,4 @@ public abstract class CardReader implements AutoCloseable
 	 */
 	@Override
 	public abstract void close();
-
-	// =================================================================================================================
-	// Печать в apduLog вынесена в отдельный класс для ясности логики выполнения команды.
-	// В будущем возможна кастомизация печати.
-	// =================================================================================================================
-
-	// -----------------------------------------------------------------------------------------------------------------
-	private static interface IApduLogger
-	{
-		public void printPowerOn();
-		public void printPowerOff();
-		public void printReset();
-		public void printATR( Binary atr );
-		public void printBeforeCommand( CApdu capdu, String callClassName );
-		public void printCApduSM( CApdu capduSM );
-		public void printRApduSM( RApdu rapduSM, boolean isTlvData );
-		public void printAfterCommand( RApdu rapdu, long commandTime, boolean isTlvData );
-	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	private static class APDULoggerNothing implements IApduLogger
-	{
-		public void printPowerOn() {}
-		public void printPowerOff() {}
-		public void printReset() {}
-		public void printATR( Binary atr ) {}
-		public void printBeforeCommand( CApdu capdu, String callClassName ) {}
-		public void printCApduSM( CApdu capduSM ) {}
-		public void printRApduSM( RApdu rapduSM, boolean isTlvData ) {}
-		public void printAfterCommand( RApdu rapdu, long commandTime, boolean isTlvData ) {}
-	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	private class APDULoggerTypical implements IApduLogger
-	{
-		ILog log;
-		
-		APDULoggerTypical( ILog log )
-		{
-			this.log = log;
-		}
-
-		public void printPowerOn()
-		{
-			log.writeln( Colors.CYAN_I, "Power on" );
-		}
-
-		public void printPowerOff()
-		{
-			log.writeln( Colors.CYAN_I, "Power off" );
-		}
-
-		public void printReset()
-		{
-			log.writeln( Colors.CYAN_I, "Reset" );
-		}
-
-		public void printATR( Binary atr )
-		{
-			log.writeln( Colors.CYAN_I, "ATR: " + atr.Hex() );
-		}
-
-		public void printBeforeCommand( CApdu capdu, String callClassName )
-		{
-			log.writeln( Colors.CYAN, "----------------------------------------------------------------" );
-			log.write( Colors.YELLOW, Strings.currentDateTime() + " -- " );
-			log.writeln( Colors.YELLOW, Ex.getCallerPlace( callClassName ) );
-			capdu.print( log, Colors.GRAY, Colors.CYAN_I, 0 );
-		}
-
-		public void printCApduSM( CApdu capduSM )
-		{
-			log.writeln( Colors.DARK_GRAY, "    +++++++++++++++ Secure Messaging +++++++++++++++" );
-			capduSM.print( log, Colors.DARK_GRAY, 0, 4 );
-		}
-
-		public void printRApduSM( RApdu rapduSM, boolean isTlvData )
-		{
-			log.writeln( Colors.DARK_GRAY, "    ~~~~~~~~~~~~~" );
-			rapduSM.print( log, Colors.DARK_GRAY, 4, isTlvData );
-			log.writeln( Colors.DARK_GRAY, "    +++++++++++++++ Secure Messaging +++++++++++++++" );
-		}
-
-		public void printAfterCommand( RApdu rapdu, long commandTime, boolean isTlvData )
-		{
-			log.writeln( Colors.GRAY, "-------------------------" );
-			rapdu.print( log, Colors.GRAY, 0, isTlvData );
-			log.writeln( Colors.MAGENTA, "Command time: " + commandTime + " ms" );
-			log.writeln( Colors.CYAN, "----------------------------------------------------------------" );
-		}
-	}
-
 }

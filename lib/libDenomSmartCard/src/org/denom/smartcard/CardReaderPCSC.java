@@ -173,16 +173,15 @@ public class CardReaderPCSC extends CardReader
 		{
 			if( isTransportLog )
 			{
-				transportLog.writeln( "        Command APDU:" );
-				transportLog.writeln( capdu.toBin().Hex( 1, 8, 16, 8 ) );
+				transportLog.writeln( " -> " + capdu.toBin().Hex( 1, 8, 0, 0 ) );
 			}
 			
 			ResponseAPDU rapdu = channel.transmit( new CommandAPDU( capdu.toBin().getBytes() ) );
 			
 			if( isTransportLog )
 			{
-				transportLog.writeln( "        Response APDU:" );
-				transportLog.writeln( new Binary( rapdu.getBytes() ).Hex( 1, 8, 16, 8 ) );
+				transportLog.writeln( " <- " + new Binary( rapdu.getBytes() ).Hex( 1, 8, 0, 0 ) );
+				transportLog.writeln( "" );
 			}
 			
 			return new RApdu( rapdu.getBytes() );
@@ -192,6 +191,13 @@ public class CardReaderPCSC extends CardReader
 			MUST( false, ex.toString() );
 		}
 		return null;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public CardReaderChannel getCardChannel( int logicalChannel )
+	{
+		return new CardReaderChannel( this, logicalChannel );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

@@ -172,7 +172,7 @@ public class RApdu
 
 		if( !response.empty() )
 		{
-			String response_hex = response.Hex( 1, 8, 16, lineShift );
+			String response_hex = response.Hex( 1, 8, 32, lineShift );
 			log.writeln( color, String.format( "%1$sResponse: %2$d (0x%2$X)", shiftStr, response.size() ) );
 			log.writeln( color, response_hex );
 
@@ -222,8 +222,15 @@ public class RApdu
 			return "Wrong key, attempts left: " + (sw2 & 0x0F);
 		}
 
+		if( sw1 == 0x91 )
+		{
+			return "Proactive command on card";
+		}
+
 		switch( status )
 		{
+			case 0x9300: return "SIM Application Toolkit is busy";
+
 			case 0x6200: return "Warning: State of non-volatile memory is unchanged";
 			case 0x6281: return "Warning: Part of returned data may be corrupted";
 			case 0x6282: return "Warning: End of file or record reached before reading Ne bytes";
@@ -289,7 +296,7 @@ public class RApdu
 	 */
 	public boolean isOk()
 	{
-		return (status == 0x9000) || (sw1() == 0x61);
+		return (status == 0x9000) || (sw1() == 0x61) || (sw1() == 0x91);
 	}
 	
 	// -----------------------------------------------------------------------------------------------------------------
@@ -330,7 +337,7 @@ public class RApdu
 	private String formUnexpectedMsg( int expectedStatus )
 	{
 		StringBuilder err = new StringBuilder( 100 );
-		err.append( "Неправильный статус. Ожидался: " );
+		err.append( "Wrong status. Expected: " );
 		
 		switch( expectedStatus )
 		{
@@ -340,7 +347,7 @@ public class RApdu
 			default:     err.append( Binary.Num_Bin( expectedStatus, 2 ).Hex() );
 		}
 
-		err.append( ", карта вернула: " );
+		err.append( ", card status: " );
 		err.append( Binary.Num_Bin( status, 2 ).Hex() );
 
 		return err.toString();

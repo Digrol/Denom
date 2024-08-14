@@ -11,7 +11,7 @@ import javax.swing.*;
 import org.denom.format.JSONObject;
 
 /**
- * Сохранение/загрузка параметров расположения окна и панелей Swing.
+ * Save/load Swing window location and panel location settings.
  */
 public class SwingContainerParams
 {

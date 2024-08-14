@@ -16,6 +16,7 @@ import static org.denom.Ex.*;
 public class ReaderFactory
 {
 	// -----------------------------------------------------------------------------------------------------------------
+	@SuppressWarnings("resource")
 	public static CardReader create( CardReaderOptions opt, boolean allowAskPassword )
 	{
 		switch( opt.type )

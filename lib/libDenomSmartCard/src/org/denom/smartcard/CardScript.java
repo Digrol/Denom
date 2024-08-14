@@ -47,6 +47,7 @@ public abstract class CardScript implements Runnable
 		 *   0 - не вести;
 		 *   1 - стандартная консоль (поток вывода);
 		 *   2 - отдельное графическое окно swing.
+		 *   3 - ANSI-консоль.
 		 */
 		public int console = 2;
 
@@ -57,8 +58,12 @@ public abstract class CardScript implements Runnable
 		
 		/**
 		 * Печатать в лог все APDU.
+		 * 0 - не печатать.
+		 * 1 - в RAW виде.
+		 * 2 - в распарсенном виде.
+		 * 3 - в RAW виде с описанием команды и места вызова.
 		 */
-		public boolean apdu = false;
+		public int apdu = 3;
 
 		/**
 		 * Печатать в лог все TPDU (транспортный лог ридера).
@@ -88,11 +93,6 @@ public abstract class CardScript implements Runnable
 	 * Лог скрипта.
 	 */
 	public ILog log = new LogDummy();
-
-	/**
-	 * Лог для APDU.
-	 */
-	public ILog logApdu = new LogDummy();
 	
 	/**
 	 * Для генерации случайных чисел в скрипте.
@@ -120,11 +120,15 @@ public abstract class CardScript implements Runnable
 				cr.setTransportLog( log );
 			}
 
-			if( opt.log.apdu )
-			{
-				logApdu = log;
-				cr.setApduLog( logApdu );
-			}
+			if( opt.log.apdu == 3 )
+				cr.setApduLogger( new ApduLoggerMinimal( log )
+						.setPrintCallPlace( true ).setPrintDescription( true ).setPrintCommandTime( true ) );
+			if( opt.log.apdu == 2 )
+				cr.setApduLogger( new ApduLoggerParsed( log ) );
+			if( opt.log.apdu == 1 )
+				cr.setApduLogger( new ApduLoggerMinimal( log ) );
+			if( opt.log.apdu == 0 )
+				cr.setApduLogger( new ApduLoggerDummy() );
 
 			Ticker t = new Ticker();
 
@@ -254,6 +258,10 @@ public abstract class CardScript implements Runnable
 			log.setDefaultColor( Colors.GREEN );
 			consoleLog = log;
 		}
+		else if( opt.log.console == 3 )
+		{
+			consoleLog = new LogConsoleANSI();
+		}
 
 		log = consoleLog;
 
@@ -351,7 +359,7 @@ public abstract class CardScript implements Runnable
 			log.writeln( Colors.DARK_GRAY, "Virtual readers:" );
 			log.writeln( Colors.DARK_GRAY, "  q - " + ReaderType.VR );
 
-			log.write( Colors.YELLOW_I, "Enter reader index: " );
+			log.write( Colors.YELLOW_I, "Enter reader index (+10 for PC/SC Native) : " );
 			String choice = readln();
 			switch( choice )
 			{
@@ -361,8 +369,17 @@ public abstract class CardScript implements Runnable
 
 				default: // PC/SC
 					int index = Integer.parseInt( choice );
-					MUST( (index > 0) && (index <= pcscReaders.length ), "Некорректный номер ридера" );
-					opt.type = ReaderType.PCSC;
+					MUST( (index > 0) && (index <= pcscReaders.length ) || (index > 10) && (index <= (pcscReaders.length+10) ),
+							"Некорректный номер ридера" );
+					if( index > 10 )
+					{
+						opt.type = ReaderType.PCSCNative;
+						index -= 10;
+					}
+					else
+					{
+						opt.type = ReaderType.PCSC;
+					}
 					opt.pcscName = pcscReaders[ index - 1 ];
 			}
 		}

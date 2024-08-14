@@ -36,7 +36,7 @@ public class WarBuilder
 	 * @param inClassPaths - Directories and JAR-files with project classes. Can be 'null'.
 	 * @param externalJars - external JARs, will be copied to 'WEB-INF/lib'.
 	 */
-	public void buildWar( String warPath, String webContentPath, String[] inClassPaths, String[] externalJars )
+	public void buildWar( String warPath, String webContentPath, String proguardParams, String[] inClassPaths, String[] externalJars )
 	{
 		log.writeln( "Creating WAR '" + warPath + "'..." );
 
@@ -55,7 +55,7 @@ public class WarBuilder
 			jb.close();
 
 			// Obfuscating JAR as servlet.
-			new ProGuard( log, proguardPath ).obfuscateJar( jarServlet, ProGuard.paramsServlet(), externalJars );
+			new ProGuard( log, proguardPath ).obfuscateJar( jarServlet, proguardParams, externalJars );
 		}
 
 

@@ -352,6 +352,71 @@ public class CApdu
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
+	 * Добавить в байт CLA номер логического канала.
+	 * До вызова метода, поле cla должно быть с 0 каналом.
+	 * @param logicalChannel Номер логического канала - от 0 до 19.
+	 * Если номер канала > 3, то будет взведён также бит 0x40.
+	 * @return this.
+	 */
+	public static int addLogicalChannel( int cla, int logicalChannel )
+	{
+		MUST( logicalChannel >= 0 && logicalChannel <= 19, "Wrong logical channel number" );
+		if( logicalChannel < 4 )
+		{
+			cla |= logicalChannel;
+		}
+		else
+		{
+			cla |= (logicalChannel - 4) | 0x40;
+		}
+		return cla;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public CApdu addLogicalChannel( int logicalChannel )
+	{
+		cla = addLogicalChannel( cla, logicalChannel );
+		return this;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Возвращает номер логического канала, закодированный в байте cla.
+	 * Для некорректного cla возвращается 0.
+	 * @return номер канала.
+	 */
+	public static int getLogicalChannel( int cla )
+	{
+		if( (cla == 0xFF) || ((cla & 0xE0) == 0x20) )
+			return 0;
+		return ((cla & 0x40) != 0) ? ((cla & 0x0F) + 4) : (cla & 0x03);
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public int getLogicalChannel()
+	{
+		return getLogicalChannel( cla );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Убрать из cla информацию о логическом канале.
+	 * обнуляются младшие 2 бита (базовые) или 4 бита и бит 0x40 (extended)
+	 * @return cla без номера канала
+	 */
+	public static int clearLogicalChannel( int cla )
+	{
+		return ((cla & 0x40) != 0) ? (cla & 0xB0) : (cla & 0xFC);
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public int clearLogicalChannel()
+	{
+		return ((cla & 0x40) != 0) ? (cla & 0xB0) : (cla & 0xFC);
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
 	 * Закодировать командное APDU в каноническую форму (в виде байтовой строки по стандарту ISO
 	 * 7816-3, п. 12.1.1).
 	 * 
@@ -441,7 +506,7 @@ public class CApdu
 		if( !data.empty() )
 		{
 			log.writeln( colorBytes, String.format( "%1$sData: %2$d (0x%2$X)", shiftStr, data.size() ) );
-			log.writeln( colorBytes, data.Hex( 1, 8, 16, lineShift ) );
+			log.writeln( colorBytes, data.Hex( 1, 8, 32, lineShift ) );
 
 			if( isTlvData )
 				printFieldAsTLV( data, log, colorBytes, lineShift, shiftStr );

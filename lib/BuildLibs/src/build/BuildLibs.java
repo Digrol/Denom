@@ -10,7 +10,7 @@ class BuildLibs
 {
 	static String BUILD_DATE = "2023.05.23";
 
-	static String ROOT = "../../..";
+	static String ROOT = "../..";
 
 	static LogConsole log = new LogConsole();
 
@@ -28,7 +28,7 @@ class BuildLibs
 	// -----------------------------------------------------------------------------------------------------------------
 	private static void buildLib( String projectName, String jarPrefix )
 	{
-		String libPath = ROOT + "/trunk/lib/" + projectName;
+		String libPath = ROOT + "/lib/" + projectName;
 		String jarName = ROOT + "/builds/libs/" + jarPrefix + "-" + BUILD_DATE + ".jar";
 
 		// Jar
@@ -47,7 +47,7 @@ class BuildLibs
 	// -----------------------------------------------------------------------------------------------------------------
 	private static void buildLibAndroid( String projectName, String jarPrefix )
 	{
-		String libPath = ROOT + "/trunk/lib/" + projectName;
+		String libPath = ROOT + "/lib/" + projectName;
 		String jarName = ROOT + "/builds/libsAndroid/" + jarPrefix + "-android-" + BUILD_DATE + ".jar";
 
 		// Jar
@@ -70,6 +70,8 @@ class BuildLibs
 		buildLibAndroid( "libDenomCommon", "org.denom.common" );
 
 		buildLib( "libDenomCrypt", "org.denom.crypt" );
-	}
+
+		buildLib( "libDenomSmartcard", "org.denom.smartcard" );
+}
 
 }

@@ -173,19 +173,25 @@ public class ApduGP
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * GET STATUS. Получить информацию о приложении. 
-	 * @param target - Тип приложения - {@link GP.GetStatusTarget}.
-	 * @param aid - AID приложения.
+	 * GET STATUS. Получить информацию о приложении.
+	 * @param aid - AID приложения. 
+	 * @param target_P1 - О чём информацию получаем (P1), {@link GP.GetStatusTarget}
+	 * @param isResponseDataNew - Если флаг взведён, то запрашиваем ответ в новом формате (устанавливаем P2.b2),
+	 * иначе в старом (deprecated).
+	 * @param isNextOccurrence - (P2.b1), если false - Get first or all occurrence(s), если true - Get next occurrence(s).
 	 */
-	public static CApdu GetStatus( int target, final Binary aid )
+	// -----------------------------------------------------------------------------------------------------------------
+	public static CApdu GetStatus( int target_P1, final Binary aid, boolean isResponseDataNew, boolean isNextOccurrence )
 	{
-		MUST( Int.isU8( target ), "status target must be U8" );
+		MUST( Int.isU8( target_P1 ) && ((target_P1 & 0x0F) == 0x00), "status target must be U8" );
 
-		CApdu ap = new CApdu( 0x80, 0xF2, target, 0x00, Tlv( 0x4F, aid ), CApdu.MAX_NE, "{GP} GET STATUS" );
+		int p2 = isNextOccurrence ? 0x01 : 0x00;
+		p2 |= isResponseDataNew ? 0x02 : 0x00;
+		CApdu ap = new CApdu( 0x80, 0xF2, target_P1, p2, Tlv( 0x4F, aid ), CApdu.MAX_NE, "{GP} GET STATUS" );
 		ap.isTlvData = true;
 		return ap;
 	}
-
+	
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * SET STATUS. 11.10. Изменить текущее состояние жизненного цикла приложения.
@@ -291,4 +297,22 @@ public class ApduGP
 		MUST( Int.isU8( GP_SecurityLevel ), "security level must be U8" );
 		return new CApdu( 0x84, 0x82, GP_SecurityLevel, 0x00, hostCryptogram, 0, "{GP} EXTERNAL AUTHENTICATE" );
 	}
+	
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * STORE DATA.
+	 * @param p1 - (all bits, except 0x80 and 0x01). 0x80 bit will be set if 'isLastBlock' == true;
+	 * bit 0x01 will be set if 'isCase4' == true
+	 * @param isCase4 - if true 
+	 */
+	public static CApdu StoreData( int p1, boolean isLastBlock, int blockNumber, boolean isCase4, final Binary data )
+	{
+		if( isLastBlock )
+			p1 |= 0x80;
+		if( isCase4 )
+			p1 |= 0x01;
+
+		return new CApdu( 0x80, 0xE2, p1, blockNumber, data, isCase4 ? CApdu.MAX_NE : 0, "{GP} STORE DATA" );
+	}
+	
 }

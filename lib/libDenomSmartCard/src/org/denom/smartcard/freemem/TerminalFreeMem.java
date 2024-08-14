@@ -35,18 +35,12 @@ public class TerminalFreeMem
 	// Поддерживается ли в карте сборка мусора.
 	public boolean isGCSupported;
 
-
-	private JC_Cap cap;
 	private String instanceAid;
 	
 	// -----------------------------------------------------------------------------------------------------------------
-	/**
-	 * @param capFileName - Полный путь к CAP-файлу с апплетом, например: "../jcFreeMem/freemem_221.cap";
-	 */
-	public TerminalFreeMem( String capFileName )
+	public TerminalFreeMem( String instanceAid )
 	{
-		this.cap = new JC_Cap( capFileName );
-		this.instanceAid = cap.classAIDs.get( 0 ).Hex();
+		this.instanceAid = instanceAid;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -127,10 +121,13 @@ public class TerminalFreeMem
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Удобство: загружается пакет с апплетом JCFreeMem, создаётся инстанс, а после замеров памяти, пакет удаляется.
+	 * @param capFileName - Полный путь к CAP-файлу с апплетом, например: "../jcFreeMem/freemem_221.cap";
 	 * @return Размер свободного места в EEPROM-е (не ограничено 0x7FFF).
 	 */
-	public int measureFreeEE( TerminalGP domain )
+	public int measureFreeEE( TerminalGP domain, String capFileName )
 	{
+		JC_Cap cap = new JC_Cap( capFileName );
+
 		domain.reloadAndInstall( cap, instanceAid, "", "" );
 		int freeEE = measureFreeEE();
 		domain.delete( cap.packageAID );

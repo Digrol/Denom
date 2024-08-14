@@ -13,7 +13,7 @@ import static org.denom.Ex.*;
  */
 public class CardReaderOptions
 {
-	static final String VR_SERVER = "localhost";
+	static final String VR_SERVER = "denom.org";
 	static final int VR_DEFAULT_PORT = 4256;
 
 	/**
@@ -30,8 +30,9 @@ public class CardReaderOptions
 	// ---------------------------------------------------------------------
 	/**
 	 * Путь к нативной библиотеке для работы с PC/SC ридерами.
+	 * Может быть пустой.
 	 */
-	public String pcscNativeDll = "CardReaderPCSCNativeJNI.dll";
+	public String pcscNativeDll = "";
 
 	// ---------------------------------------------------------------------
 	/**

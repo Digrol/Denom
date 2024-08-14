@@ -208,6 +208,13 @@ public class CardReaderVRSocket extends CardReader
 
 	// -----------------------------------------------------------------------------------------------------------------
 	@Override
+	public CardReaderChannel getCardChannel( int logicalChannel )
+	{
+		return new CardReaderChannel( this, logicalChannel );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
 	public CardReader setTransportLog( ILog log )
 	{
 		super.setTransportLog( log );

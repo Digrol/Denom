@@ -15,6 +15,30 @@ import static org.denom.Ex.*;
 public class ApduIso
 {
 	// -----------------------------------------------------------------------------------------------------------------
+	public static CApdu SelectFile( String fileID )
+	{
+		return SelectFile( Bin(fileID), SelectAnswer.FCP, CApdu.MAX_NE );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public static CApdu SelectFile( final Binary fileID )
+	{
+		return SelectFile( fileID, SelectAnswer.FCP, CApdu.MAX_NE );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Выбрать файл по File ID.
+	 * @param selectAnswer - Что возвращать в ответе, см. константы в {@link SelectAnswer}.
+	 */
+	public static CApdu SelectFile( final Binary fileID, int selectAnswer, int Ne )
+	{
+		CApdu ap = new CApdu( 0x00, 0xA4, 0x00, selectAnswer, fileID, Ne, "{ISO} SELECT by FileID" );
+		ap.isTlvData = true;
+		return ap;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Сужение интерфейса для удобства.
 	 * Выбрать приложение или каталог по AID (Application Identifier).

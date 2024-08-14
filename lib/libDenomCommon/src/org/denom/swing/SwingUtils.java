@@ -118,16 +118,16 @@ public class SwingUtils
 			UIManager.put( "TitledBorder.font", defaultFont );
 
 			UIManager.put( "FileChooser.readOnly", Boolean.TRUE );
-			UIManager.put( "FileChooser.saveButtonText", "Сохранить" );
-			UIManager.put( "FileChooser.openButtonText", "Открыть" );
-			UIManager.put( "FileChooser.cancelButtonText", "Отмена" );
+			UIManager.put( "FileChooser.saveButtonText", "Save" );
+			UIManager.put( "FileChooser.openButtonText", "Open" );
+			UIManager.put( "FileChooser.cancelButtonText", "Cancel" );
 
-			UIManager.put( "FileChooser.lookInLabelText", "Папка:" );
-			UIManager.put( "FileChooser.filesOfTypeLabelText", "Тип файлов:" );
-			UIManager.put( "FileChooser.fileNameLabelText", "Имя файла:" );
+			UIManager.put( "FileChooser.lookInLabelText", "Directory:" );
+			UIManager.put( "FileChooser.filesOfTypeLabelText", "File type:" );
+			UIManager.put( "FileChooser.fileNameLabelText", "File name:" );
 
-			UIManager.put( "OptionPane.yesButtonText", "ОК" );
-			UIManager.put( "OptionPane.cancelButtonText", "Отмена" );
+			UIManager.put( "OptionPane.yesButtonText", "OK" );
+			UIManager.put( "OptionPane.cancelButtonText", "Cancel" );
 
 			SwingUtilities.updateComponentTreeUI( frame );
 		}
@@ -149,8 +149,8 @@ public class SwingUtils
 				if( e.isPopupTrigger() )
 				{
 					JPopupMenu menu = new JPopupMenu();
-					JMenuItem itemCopy = new JMenuItem( "Копировать" );
-					JMenuItem itemPaste = new JMenuItem( "Вставить" );
+					JMenuItem itemCopy = new JMenuItem( "Copy" );
+					JMenuItem itemPaste = new JMenuItem( "Paste" );
 					itemCopy.addActionListener( new DefaultEditorKit.CopyAction() );
 					itemPaste.addActionListener( new DefaultEditorKit.PasteAction() );
 					itemCopy.setEnabled( textField.getSelectionStart() != textField.getSelectionEnd() );
@@ -254,7 +254,7 @@ public class SwingUtils
 			if( e.isPopupTrigger() )
 			{
 				JPopupMenu menu = new JPopupMenu();
-				JMenuItem itemCopy = new JMenuItem( "Копировать" );
+				JMenuItem itemCopy = new JMenuItem( "Copy" );
 				itemCopy.addActionListener( new DefaultEditorKit.CopyAction() );
 				itemCopy.setEnabled( textArea.getSelectionStart() != textArea.getSelectionEnd() );
 				menu.add( itemCopy );
@@ -324,7 +324,7 @@ public class SwingUtils
 				}
 
 				JPopupMenu menu = new JPopupMenu();
-				JMenuItem itemCopy = new JMenuItem( "Копировать" );
+				JMenuItem itemCopy = new JMenuItem( "Copy" );
 
 				menu.add( itemCopy );
 				menu.show( e.getComponent(), e.getX(), e.getY() );

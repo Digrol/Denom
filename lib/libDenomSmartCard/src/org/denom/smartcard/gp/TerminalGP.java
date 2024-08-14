@@ -195,15 +195,11 @@ public class TerminalGP
 	// =================================================================================================================
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private void tuneApduLog( String actionMessage, Runnable action )
+	private void tuneApduLog( Runnable action )
 	{
-		log.write( COLOR_INFO, actionMessage );
-
-		ILog apduLog = cr.getApduLog();
+		IApduLogger apduLogger = cr.getApduLogger();
 		if( !printApdu )
-		{
-			cr.setApduLog( null );
-		}
+			cr.setApduLogger( null );
 
 		try
 		{
@@ -211,8 +207,7 @@ public class TerminalGP
 		}
 		finally
 		{
-			cr.setApduLog( apduLog );
-			log.writeln( "" );
+			cr.setApduLogger( apduLogger );
 		}
 	}
 
@@ -224,9 +219,10 @@ public class TerminalGP
 	 */
 	public Binary select()
 	{
+		log.writeln( COLOR_INFO, "Select domain..." );
 		sm = null;
 
-		tuneApduLog( "Select domain... ", () ->
+		tuneApduLog( () ->
 		{
 			if( aid.empty() )
 			{
@@ -243,7 +239,7 @@ public class TerminalGP
 				}
 			}
 	
-			log.write( COLOR_INFO, aidLastSelected.Hex() );
+			log.writeln( COLOR_INFO, aidLastSelected.Hex() );
 		} );
 
 		return aidLastSelected;
@@ -307,7 +303,9 @@ public class TerminalGP
 	 */
 	public GP_SM connectOnly()
 	{
-		tuneApduLog( "Connect domain... ", () ->
+		log.writeln( COLOR_INFO, "Connect domain..." );
+
+		tuneApduLog( () ->
 		{
 			if( securityModule != null )
 			{
@@ -324,9 +322,9 @@ public class TerminalGP
 			{
 				connectTestDomain( keysVersion, secLevel );
 			}
-
-			log.write( COLOR_INFO, "OK" );
 		} );
+		log.writeln( COLOR_INFO, "OK" );
+
 		return sm;
 	}
 
@@ -344,28 +342,25 @@ public class TerminalGP
 	// -----------------------------------------------------------------------------------------------------------------
 	public boolean deleteOnly( final Binary aid )
 	{
-		Int ok = new Int( 0 );
+		log.writeln( COLOR_INFO, "Delete " + aid.Hex() + "... " );
 
-		tuneApduLog( "Delete " + aid.Hex() + "... ", () ->
+		tuneApduLog( () ->
 		{
 			Cmd( sm, ApduGP.Delete( aid, GP.DelMode.OBJECT_WITH_DEPS ), RApdu.ST_ANY );
 			if( !cr.rapdu.isOk() )
 			{
 				Cmd( sm, ApduGP.Delete( aid, GP.DelMode.OBJECT ), RApdu.ST_ANY );
 			}
-
-			if( cr.rapdu.isOk() )
-			{
-				log.write( COLOR_INFO, "OK" );
-				ok.val = 1;
-			}
-			else
-			{
-				log.write( COLOR_WARNING, "Failed. Status: 0x" + Num_Bin( cr.rapdu.status, 2 ).Hex() );
-			}
 		} );
 
-		return ok.val == 1;
+		if( !cr.rapdu.isOk() )
+		{
+			log.writeln( COLOR_WARNING, "Failed. Status: 0x" + Num_Bin( cr.rapdu.status, 2 ).Hex() );
+			return false;
+		}
+
+		log.writeln( COLOR_INFO, "OK" );
+		return true;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -396,7 +391,8 @@ public class TerminalGP
 	 */
 	public void loadOnly( JC_Cap cap, Binary keyDap )
 	{
-		tuneApduLog( "Load package " + cap.packageAID.Hex() + "... ", () ->
+		log.writeln( COLOR_INFO, "Load package " + cap.packageAID.Hex() + "... " );
+		tuneApduLog( () ->
 		{
 			Binary data = cap.toBinary( false );
 			int size = data.size();
@@ -437,7 +433,7 @@ public class TerminalGP
 	
 				++block_num;
 			}
-			log.write( COLOR_INFO, "OK" );
+			log.writeln( COLOR_INFO, "OK" );
 		} );
 	}
 
@@ -487,19 +483,21 @@ public class TerminalGP
 	// -----------------------------------------------------------------------------------------------------------------
 	public void installOnly( Binary packageAid, Binary classAid, Binary instanceAid, Binary appParams, Binary sysParams )
 	{
-		tuneApduLog( "Install (" + packageAid.Hex() + ", " + classAid.Hex() + ")  ->  " + instanceAid.Hex(), () ->
+		log.write( COLOR_INFO, "Install (" + packageAid.Hex() + ", " + classAid.Hex() + ")  ->  " + instanceAid.Hex() );
+		if( !appParams.empty() )
 		{
-			if( !appParams.empty() )
-			{
-				log.writeln("");
-				log.write( COLOR_INFO,"    params: " + appParams.Hex() );
-			}
-			log.write( COLOR_INFO, "... " );
+			log.writeln("");
+			log.write( COLOR_INFO,"    params: " + appParams.Hex() );
+		}
+		log.writeln( COLOR_INFO, "... " );
 
+		tuneApduLog( () ->
+		{
 			Cmd( sm, ApduGP.InstallForInstall( packageAid, classAid, instanceAid, appParams, 0, sysParams ) );
-			log.write( COLOR_INFO, "OK" );
 		} );
-	}
+
+		log.writeln( COLOR_INFO, "OK" );
+}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
@@ -552,84 +550,106 @@ public class TerminalGP
 	 */
 	public Arr< Pair<Binary, Binary> > getStatus( int getStatusTarget )
 	{
+		MUST( getStatusTarget != GP.GetStatusTarget.PKG_MDLS, "Dont call this method with 'getStatusTarget == 0x10'" );
+		log.writeln( COLOR_INFO, "Get Status 0x" + Num_Bin( getStatusTarget, 1 ).Hex() + "..." );
+
+		tuneApduLog( () ->
+		{
+			cr.Cmd( sm, ApduGP.GetStatus( getStatusTarget, Bin(), false, false ), RApdu.ST_ANY );
+		} );
+
 		Arr< Pair<Binary, Binary> > res = new Arr<>( 16 );
 
-		tuneApduLog( "Get Status 0x" + Num_Bin( getStatusTarget, 1 ).Hex() + "... ", () ->
+		if( !cr.rapdu.isOk() )
 		{
-			cr.Cmd( sm, ApduGP.GetStatus( getStatusTarget, Bin() ), RApdu.ST_ANY );
+			log.writeln( COLOR_WARNING, "Failed. Status: 0x" + Num_Bin( cr.rapdu.status, 2 ).Hex() );
+			return res;
+		}
 
-			if( cr.rapdu.isOk() )
-			{
-				log.write( COLOR_INFO, "OK" );
+		log.writeln( COLOR_INFO, "OK" );
 
-				Binary resp = cr.resp;
-				for( int i = 0; i < resp.size(); )
-				{
-					int aidLen = resp.get( i );
-					i++;
-					Binary aid = resp.slice( i, aidLen );
-					i += aidLen;
-					Binary info = resp.slice( i, 2 );
-					i += 2;
-					res.add( Pair.of( aid, info ) );
-				}
-			}
-			else
-			{
-				log.write( COLOR_WARNING, "Failed. Status: 0x" + Num_Bin( cr.rapdu.status, 2 ).Hex() );
-			}
-		} );
+		Binary resp = cr.resp;
+		for( int i = 0; i < resp.size(); )
+		{
+			int aidLen = resp.get( i );
+			i++;
+			Binary aid = resp.slice( i, aidLen );
+			i += aidLen;
+			Binary info = resp.slice( i, 2 );
+			i += 2;
+			res.add( Pair.of( aid, info ) );
+		}
 		return res;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
+	 * Подаёт команду GET STATUS, вычитывает ответ за несколько команд и конкатенирует его, если возникает статус 0x6310. 
+	 * @param aid - AID приложения.
+	 * @param target_P1 - О чём информацию получаем (P1), {@link GP.GetStatusTarget}
+	 * @param isResponseDataNew - Если флаг взведён, то запрашиваем ответ в новом формате (устанавливаем P2.b2),
+	 * иначе в старом (deprecated).
+	 * @return конкатенированный ответ от карты.
+	 */
+	public Binary getStatus( int target_P1, final Binary aid, boolean isResponseDataNew )
+	{
+		final Binary answer = Bin();
+		log.writeln( COLOR_INFO, "GET STATUS..." );
+		tuneApduLog( () ->
+		{
+			CApdu ap = ApduGP.GetStatus( target_P1, aid, isResponseDataNew, false );
+			cr.Cmd( sm, ap, RApdu.ST_ANY );
+			answer.assign( cr.resp );
+
+			while( cr.rapdu.status == 0x6310 )
+			{
+				ap = ApduGP.GetStatus( target_P1, aid, isResponseDataNew, true );
+				cr.Cmd( sm, ap, RApdu.ST_ANY );
+				answer.add( cr.resp );
+			}
+
+			if( !cr.rapdu.isOk() )
+			{
+				log.writeln( COLOR_WARNING, "Failed. Status: 0x" + Num_Bin( cr.rapdu.status, 2 ).Hex() );
+				return;
+			}
+
+			log.writeln( COLOR_INFO, "Ok" );
+		} );
+		return answer;
+	}
+	
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
 	 * Получить список пакетов и классов-апплетов в них.
+	 * Формат ответа - p1 = 0 (Deprecated)
 	 * @return { AID пакета : AID-ы классов }.
 	 *    Если у пакета нет классов, массив AID-ов классов пустой.
 	 */
 	public Arr< Pair<Binary, Arr<Binary>> > getPackagesAndClasses()
 	{
 		Arr< Pair<Binary, Arr<Binary>> > res = new Arr<>( 16 );
-		
-		tuneApduLog(  "Get Packages and Applet Classes... ", () ->
+
+		log.writeln( COLOR_INFO, "Get Packages and Applet Classes..." );
+		Binary info = getStatus( GP.GetStatusTarget.PKG_MDLS, Bin(), false );
+
+		for( int offset = 0; offset < info.size(); )
 		{
-			CApdu ap = ApduGP.GetStatus( GP.GetStatusTarget.PKG_MDLS, Bin() );
-			cr.Cmd( sm, ap, RApdu.ST_ANY );
-			Binary info = cr.resp.clone();
+			Binary packageAid = info.slice( offset + 1, info.get( offset ) );
+			offset += packageAid.size() + 3;
 
-			while( cr.rapdu.status == 0x6310 )
+			int classNumber = info.get( offset++ );
+			Arr<Binary> classList = new Arr<>( classNumber );
+			for( int j = 0; j < classNumber; ++j )
 			{
-				ap.p2 = 0x01; // Next
-				cr.Cmd( sm, ap, RApdu.ST_ANY );
-				info.add( cr.resp );
+				int len = info.get( offset++ );
+				classList.add( info.slice( offset, len ) );
+				offset += len;
 			}
 
-			if( !cr.rapdu.isOk() )
-			{
-				log.write( COLOR_WARNING, "Failed. Status: 0x" + Num_Bin( cr.rapdu.status, 2 ).Hex() );
-				return;
-			}
+			res.add( Pair.of( packageAid, classList ) );
+		}
 
-			log.write( COLOR_INFO, "Ok" );
-
-			for( int offset = 0; offset < info.size(); )
-			{
-				Binary packageAid = info.slice( offset + 1, info.get( offset ) );
-				offset += packageAid.size() + 3;
-
-				int classNumber = info.get( offset++ );
-				Arr<Binary> classList = new Arr<>( classNumber );
-				for( int j = 0; j < classNumber; ++j )
-				{
-					int len = info.get( offset++ );
-					classList.add( info.slice( offset, len ) );
-					offset += len;
-				}
-
-				res.add( Pair.of( packageAid, classList ) );
-			}
-		} );
 		return res;
 	}
 
@@ -643,22 +663,21 @@ public class TerminalGP
 	 */
 	public Binary getData( int tag )
 	{
-		Binary data = Bin();
-		tuneApduLog( "Get Data, tag: " + Num_Bin( tag, 1 ).Hex() + "... ", () ->
+		log.writeln( COLOR_INFO, "Get Data, tag: " + Num_Bin( tag, 1 ).Hex() + "..." );
+		
+		tuneApduLog( () ->
 		{
 			cr.Cmd( sm, ApduGP.GetData( tag ), RApdu.ST_ANY );
-			if( cr.rapdu.isOk() )
-			{
-				data.assign( new BerTLV( cr.resp ).value );
-				log.write( COLOR_INFO, "Ok" );
-			}
-			else
-			{
-				log.write( Colors.YELLOW_I,  "Failed or absent" );
-			}
-			
 		} );
-		return data;
+
+		if( !cr.rapdu.isOk() )
+		{
+			log.writeln( Colors.YELLOW_I,  "Failed or absent" );
+			return Bin();
+		}
+
+		log.writeln( COLOR_INFO, "Ok" );
+		return new BerTLV( cr.resp ).value;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -714,13 +733,17 @@ public class TerminalGP
 	 */
 	public void changeKey( int keyId, int keyVersionCurrent, int keyVersionNew, final Binary keyValue )
 	{
-		tuneApduLog( "Change Key, KeyId: " + keyId + ", KeyVersionCurrent: " + keyVersionCurrent
-				+ ", KeyVersionNew: " + keyVersionNew + " ... ", () ->
+		log.writeln( "Change Key, KeyId: " + keyId + ", KeyVersionCurrent: " + keyVersionCurrent
+				+ ", KeyVersionNew: " + keyVersionNew + " ..." );
+
+		MUST( keyValue.size() == DES2_EDE.KEY_SIZE, "Wrong key size, must be 16 bytes" );
+		
+		tuneApduLog( () ->
 		{
-			MUST( keyValue.size() == DES2_EDE.KEY_SIZE, "Wrong key size, must be 16 bytes" );
 			Cmd( sm, ApduGP.PutKey( keyId, 0x80, keyVersionCurrent, keyVersionNew, keyValue, sm.dekCipher.getKey() ) );
-			log.write( COLOR_INFO, "OK" );
 		} );
+
+		log.writeln( COLOR_INFO, "OK" );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -733,13 +756,17 @@ public class TerminalGP
 	 */
 	public void createSmKeys( int keyVersionNew, final Binary keyEnc, final Binary keyMac, final Binary keyDek )
 	{
-		tuneApduLog( "Create KeySet for SM, KeyVersionNew: " + keyVersionNew + " ... ", () ->
+		log.writeln( COLOR_INFO, "Create KeySet for SM, KeyVersionNew: " + keyVersionNew + " ..." );
+
+		MUST( (keyEnc.size() == DES2_EDE.KEY_SIZE) && (keyMac.size() == DES2_EDE.KEY_SIZE) && (keyDek.size() == DES2_EDE.KEY_SIZE),
+			"Wrong key size, must be 16 bytes" );
+
+		tuneApduLog( () ->
 		{
-			MUST( (keyEnc.size() == DES2_EDE.KEY_SIZE) && (keyMac.size() == DES2_EDE.KEY_SIZE) && (keyDek.size() == DES2_EDE.KEY_SIZE),
-				"Wrong key size, must be 16 bytes" );
 			Cmd( sm, ApduGP.PutKey_KeySet( 1, 0x80, 0, keyVersionNew, keyEnc, keyMac, keyDek, sm.dekCipher.getKey() ) );
-			log.write( COLOR_INFO, "OK" );
 		} );
+
+		log.writeln( COLOR_INFO, "OK" );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -749,13 +776,17 @@ public class TerminalGP
 	 */
 	public void changeSmKeys( int keyVersionCurrent, int keyVersionNew, final Binary keyEnc, final Binary keyMac, final Binary keyDek )
 	{
-		tuneApduLog( "Change KeySet for SM, KeyVersionCurrent: " + keyVersionCurrent + ", KeyVersionNew: " + keyVersionNew + " ... ", () ->
-		{
-			MUST( (keyEnc.size() == DES2_EDE.KEY_SIZE) && (keyMac.size() == DES2_EDE.KEY_SIZE) && (keyDek.size() == DES2_EDE.KEY_SIZE),
+		log.writeln( COLOR_INFO, "Change KeySet for SM, KeyVersionCurrent: " + keyVersionCurrent + ", KeyVersionNew: " + keyVersionNew + " ... " );
+
+		MUST( (keyEnc.size() == DES2_EDE.KEY_SIZE) && (keyMac.size() == DES2_EDE.KEY_SIZE) && (keyDek.size() == DES2_EDE.KEY_SIZE),
 				"Wrong key size, must be 16 bytes" );
+
+		tuneApduLog( () ->
+		{
 			Cmd( sm, ApduGP.PutKey_KeySet( 1, 0x80, keyVersionCurrent, keyVersionNew, keyEnc, keyMac, keyDek, sm.dekCipher.getKey() ) );
-			log.write( COLOR_INFO, "OK" );
 		} );
+
+		log.writeln( COLOR_INFO, "OK" );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -764,11 +795,13 @@ public class TerminalGP
 	 */
 	public void changeSmKeys( int keyVersionNew, final Binary keyEnc, final Binary keyMac, final Binary keyDek )
 	{
-		tuneApduLog( "Change KeySet for SM, KeyVersionCurrent: " + sm.keysVersion + ", KeyVersionNew: " + keyVersionNew + " ... ", () ->
-		{
-			MUST( (keyEnc.size() == DES2_EDE.KEY_SIZE) && (keyMac.size() == DES2_EDE.KEY_SIZE) && (keyDek.size() == DES2_EDE.KEY_SIZE),
-					"Wrong key size, must be 16 bytes" );
+		log.writeln( COLOR_INFO, "Change KeySet for SM, KeyVersionCurrent: " + sm.keysVersion + ", KeyVersionNew: " + keyVersionNew + " ..." );
 
+		MUST( (keyEnc.size() == DES2_EDE.KEY_SIZE) && (keyMac.size() == DES2_EDE.KEY_SIZE) && (keyDek.size() == DES2_EDE.KEY_SIZE),
+				"Wrong key size, must be 16 bytes" );
+
+		tuneApduLog( () ->
+		{
 			if( sm.keysVersion == 0xFF ) // current is initial Secure Channel KeySet
 			{
 				Cmd( sm, ApduGP.PutKey_KeySet( 1, 0x80, 0, keyVersionNew, keyEnc, keyMac, keyDek, sm.dekCipher.getKey() ) );
@@ -788,8 +821,9 @@ public class TerminalGP
 					Cmd( sm, ApduGP.PutKey( 3, 0x80, keyVersionNew, keyVersionNew, keyDek, sm.dekCipher.getKey() ) );
 				}
 			}
-			log.write( COLOR_INFO, "OK" );
 		} );
+
+		log.writeln( COLOR_INFO, "OK" );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

@@ -46,5 +46,8 @@ public class CardReaderNull extends CardReader
 	public RApdu transmit( CApdu capdu ) { return new RApdu(); }
 
 	@Override
+	public CardReader getCardChannel( int logicalChannel ) { return this; }
+
+	@Override
 	public void close() {}
 }

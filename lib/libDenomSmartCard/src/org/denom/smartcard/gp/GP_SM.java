@@ -209,11 +209,14 @@ public class GP_SM implements ISM
 		int Ne;
 		Binary mac = Bin();
 
+		int logicalChannel = noSM.getLogicalChannel();
+		int cleanCla = noSM.clearLogicalChannel();
+
 		// буфер для R-MAC
 		if( (securityLevel & GP.SecLevel.RMAC ) != 0x00 )
 		{
 			rmacBuf.resize( 0 );
-			rmacBuf.add( noSM.cla );
+			rmacBuf.add( cleanCla );
 			rmacBuf.add( noSM.ins );
 			rmacBuf.add( noSM.p1 );
 			rmacBuf.add( noSM.p2 );
@@ -225,7 +228,15 @@ public class GP_SM implements ISM
 		{
 			Binary cmacBuf = Bin();
 			cmacBuf.reserve( 5 + noSM.data.size() );
-			cmacBuf.add( noSM.cla | 0x04 );
+			// with SM bit
+			if( logicalChannel > 3 )
+			{
+				cmacBuf.add( cleanCla | 0x20 );
+			}
+			else
+			{
+				cmacBuf.add( cleanCla | 0x04 );
+			}
 			cmacBuf.add( noSM.ins );
 			cmacBuf.add( noSM.p1 );
 			cmacBuf.add( noSM.p2 );
@@ -261,9 +272,20 @@ public class GP_SM implements ISM
 			Ne += 8;
 		}
 
-		CApdu withSM = new CApdu( (securityLevel != 0x00) ? (noSM.cla | 0x04) : noSM.cla,
-			noSM.ins, noSM.p1, noSM.p2, data_field, Ne );
+		int cla = noSM.cla;
+		if( securityLevel != 0x00 )
+		{
+			if( logicalChannel > 3 )
+			{
+				cla |= 0x20;
+			}
+			else
+			{
+				cla |= 0x04;
+			}
+		}
 
+		CApdu withSM = new CApdu( cla, noSM.ins, noSM.p1, noSM.p2, data_field, Ne );
 		return withSM;
 	}
 
