@@ -7,6 +7,7 @@ import org.denom.Binary;
 import org.denom.log.*;
 import org.denom.format.*;
 import org.denom.crypt.hash.*;
+import org.denom.crypt.x509.CertificateX509v3;
 import org.denom.crypt.RSA;
 import org.denom.crypt.ec.ECDSA;
 import org.denom.crypt.ec.Fp.custom.Secp256r1;
@@ -17,18 +18,27 @@ import static org.denom.Ex.MUST;
 // -----------------------------------------------------------------------------------------------------------------
 public class UseASymCrypt
 {
+	static ILog log = new LogColoredConsoleWindow();
+	static SHA256 hashAlg = new SHA256();
+
+	// -----------------------------------------------------------------------------------------------------------------
 	public static void main( String[] args )
 	{
-		ILog log = new LogColoredConsoleWindow();
-
 		// Generate some random bytes
 		Binary data = Bin().random( 200 );
 		log.writeln( "Random data:" );
 		log.writeln( Colors.GREEN, data.Hex(1, 8, 32, 4) );
 
-		SHA256 hashAlg = new SHA256();
-		Binary hash = hashAlg.calc( data );
+		Binary dataHash = hashAlg.calc( data );
+		useRSA( dataHash );
+		useECDSA( dataHash );
 
+		parseCertificateX509( "CERT_CI_ECDSA_NIST.der" );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	static void useRSA( Binary dataHash )
+	{
 		// Sign with RSA
 		RSA rsa = new RSA().generateKeyPair( 1024, Bin("03") );
 		
@@ -36,18 +46,21 @@ public class UseASymCrypt
 		rsa.toJSON().save( "rsakey.json", 4 );
 		log.writeln( "OK\n" );
 
-		Binary sign = rsa.calcSignPSS( hash, hashAlg );
+		Binary sign = rsa.calcSignPSS( dataHash, hashAlg );
 		log.writeln( "RSA signature:" );
 		log.writeln( Colors.CYAN, sign.Hex(1, 8, 32, 4) );
 
 		// Verify sign
-		MUST( rsa.verifySignPSS( hash, hashAlg, sign ), "Wrong RSA signature" );
+		MUST( rsa.verifySignPSS( dataHash, hashAlg, sign ), "Wrong RSA signature" );
 		log.writeln( Colors.GREEN_I, "RSA sign is OK." );
+	}
 
-
+	// -----------------------------------------------------------------------------------------------------------------
+	static void useECDSA( Binary dataHash )
+	{
 		// Sign with EC
 		ECDSA ecdsa = new ECDSA( new Secp256r1() ).generateKeyPair();
-		sign = ecdsa.signStd( hash );
+		Binary sign = ecdsa.signStd( dataHash );
 
 		log.writeln( "\nECDSA signature (in ASN.1 format):" );
 		log.writeln( Colors.CYAN, sign.Hex(1, 8, 32, 4) );
@@ -56,9 +69,30 @@ public class UseASymCrypt
 		log.writeln( Colors.CYAN_I, new BerTLVList( sign ).toString( 4 ) );
 
 		// Verify sign
-		MUST( ecdsa.verifyStd( hash, sign ), "Wrong ECDSA signature" );
+		MUST( ecdsa.verifyStd( dataHash, sign ), "Wrong ECDSA signature" );
+
+		Binary signPlain = ecdsa.sign( dataHash );
+		log.writeln( "\nECDSA signature (plain - r || s):" );
+		log.writeln( Colors.CYAN, signPlain.Hex(1, 8, 32, 4) );
+		// Verify sign
+		MUST( ecdsa.verify( dataHash, signPlain ), "Wrong ECDSA signature" );
 
 		log.writeln( Colors.GREEN_I, "ECDSA sign is OK." );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	static void parseCertificateX509( String fileName )
+	{
+		Binary certBin = new Binary().loadFromFile( fileName );
+		CertificateX509v3 cert = new CertificateX509v3().fromBin( certBin );
+
+		log.writeln( "\nSelf-signed X.509 Certificate in DER (TLV bytes):" );
+		log.writeln( 0xFFEEBB33, cert.toString() );
+
+		ECDSA ecdsa = new ECDSA( new Secp256r1() );
+		ecdsa.setPublic( cert.subjectPublicKey );
+		MUST( ecdsa.verifyStd( new SHA256().calc( cert.tbsCertificateFull ), cert.signatureValue ) );
+		log.writeln( Colors.GREEN_I, "Certificate sign is OK." );
 	}
 
 }

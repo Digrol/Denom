@@ -24,7 +24,7 @@ import static org.denom.Ex.MUST;
  */
 public class CertificateX509v3
 {
-	protected Binary tbsCertificateFull;
+	public Binary tbsCertificateFull;
 	public BerTLVList tbsCertificate; // value of 'tbsCertificate'
 
 	// value of 'signatureAlgorithm' without SEQUENCE tag:
