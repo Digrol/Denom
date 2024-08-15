@@ -8,7 +8,7 @@ import org.denom.log.LogConsole;
  */
 class BuildLibs
 {
-	static String BUILD_DATE = "2023.05.23";
+	static String BUILD_DATE = "2024.08.15";
 
 	static String ROOT = "../..";
 
