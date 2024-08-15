@@ -26,26 +26,27 @@ class BuildLibs
 	};
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private static void buildLib( String projectName, String jarPrefix )
+	private static void buildLib( String jarPrefix, String... projectNames )
 	{
-		String libPath = ROOT + "/lib/" + projectName;
 		String jarName = ROOT + "/builds/libs/" + jarPrefix + "-" + BUILD_DATE + ".jar";
 
 		// Jar
 		JarBuilder jb = new JarBuilder( log, jarName );
 		jb.exclude( "LICENSE.txt" );
-		jb.addDirectory( libPath + "/.bin" );
+		for( String projectName : projectNames )
+			jb.addDirectory( ROOT + "/lib/" + projectName + "/.bin" );
 		jb.close();
 
 		// Sources
 		jb = new JarBuilder( log, jarName.replace( ".jar", "-sources.jar" ) );
 		jb.exclude( "LICENSE.txt" );
-		jb.addDirectory( libPath + "/src" );
+		for( String projectName : projectNames )
+			jb.addDirectory( ROOT + "/lib/" + projectName + "/src" );
 		jb.close();
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private static void buildLibAndroid( String projectName, String jarPrefix )
+	private static void buildLibAndroid( String jarPrefix, String projectName )
 	{
 		String libPath = ROOT + "/lib/" + projectName;
 		String jarName = ROOT + "/builds/libsAndroid/" + jarPrefix + "-android-" + BUILD_DATE + ".jar";
@@ -66,12 +67,12 @@ class BuildLibs
 	// -----------------------------------------------------------------------------------------------------------------
 	public static void main( String[] args ) throws Exception
 	{
-		buildLib( "libDenomCommon", "org.denom.common" );
-		buildLibAndroid( "libDenomCommon", "org.denom.common" );
+		buildLib( "org.denom.common",         "libDenomCommon" );
+		buildLib( "org.denom.crypt",          "libDenomCrypt" );
+		buildLib( "org.denom.smartcard",      "libDenomSmartcard" );
+		buildLib( "org.denom.smartcard-full", "libDenomSmartcard", "libDenomCrypt", "libDenomCommon" );
 
-		buildLib( "libDenomCrypt", "org.denom.crypt" );
-
-		buildLib( "libDenomSmartcard", "org.denom.smartcard" );
-}
+		buildLibAndroid( "org.denom.common", "libDenomCommon" );
+	}
 
 }
