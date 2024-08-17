@@ -427,7 +427,7 @@ public class TlsPSKSession
 			recordBody.assign( inBuf, 5, fragmentLength );
 			
 			log.writeln( Colors.DARK_GRAY, "---------------------------------" );
-			log.writeln( colorRecv1, String.format( "recv [%4d] : %02X %04X %04X %s",
+			log.writeln( colorRecv1, String.format( Locale.US, "recv [%4d] : %02X %04X %04X %s",
 					fullLen, recordType, tlsVersion, fragmentLength, recordBody.Hex()) );
 
 			inBuf.assign( inBuf, fullLen, inBuf.size() - fullLen );
@@ -540,7 +540,7 @@ public class TlsPSKSession
 		rec.addU16( cipheredData.size() );
 		rec.add( cipheredData );
 
-		log.writeln( colorSend1, String.format( "send [%4d] : %02X %04X %04X %s\n",
+		log.writeln( colorSend1, String.format( Locale.US, "send [%4d] : %02X %04X %04X %s\n",
 				rec.size(), recordType, this.protocolVersion, cipheredData.size(), cipheredData.Hex() ) );
 
 		MUST( funcSendData != null, "funcSendData == null" );

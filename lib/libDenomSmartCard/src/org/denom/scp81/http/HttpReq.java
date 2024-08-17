@@ -4,6 +4,7 @@
 package org.denom.scp81.http;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.denom.*;
@@ -140,7 +141,7 @@ public class HttpReq
 		String s = getStartLine() + getHeadersStr() + "\r\n";
 		if( (body != null) && !body.empty() )
 		{
-			s += String.format( "Body [%d]: \r\n", body.size() );
+			s += String.format( Locale.US, "Body [%d]: \r\n", body.size() );
 			s += body.Hex( 1, 8, 32, 0 );
 		}
 		return s;

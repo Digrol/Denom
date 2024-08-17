@@ -4,6 +4,7 @@
 package org.denom.smartcard;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 import org.denom.*;
 import org.denom.log.*;
@@ -500,12 +501,12 @@ public class CApdu
 		}
 
 		log.writeln( colorBytes, shiftStr + "CLA  INS   P1   P2     Ne" );
-		log.writeln( colorBytes, String.format( "%s %02X   %02X   %02X   %02X     %6$d  (0x%6$X)",
+		log.writeln( colorBytes, String.format( Locale.US, "%s %02X   %02X   %02X   %02X     %6$d  (0x%6$X)",
 				shiftStr, cla, ins, p1, p2, Ne ) );
 
 		if( !data.empty() )
 		{
-			log.writeln( colorBytes, String.format( "%1$sData: %2$d (0x%2$X)", shiftStr, data.size() ) );
+			log.writeln( colorBytes, String.format( Locale.US, "%1$sData: %2$d (0x%2$X)", shiftStr, data.size() ) );
 			log.writeln( colorBytes, data.Hex( 1, 8, 32, lineShift ) );
 
 			if( isTlvData )

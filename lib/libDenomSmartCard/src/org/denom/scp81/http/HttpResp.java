@@ -155,7 +155,7 @@ public class HttpResp
 		sb.append( "\r\n" );
 		if( (body != null) && !body.empty() )
 		{
-			sb.append( String.format( "Body [%d]: \r\n", body.size() ) );
+			sb.append( String.format(  Locale.US, "Body [%d]: \r\n", body.size() ) );
 			sb.append( body.Hex( 1, 8, 32, 0 ) );
 		}
 		return sb.toString();

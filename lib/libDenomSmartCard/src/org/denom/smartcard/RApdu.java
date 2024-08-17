@@ -4,6 +4,7 @@
 package org.denom.smartcard;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 import org.denom.*;
 import org.denom.log.*;
@@ -173,7 +174,7 @@ public class RApdu
 		if( !response.empty() )
 		{
 			String response_hex = response.Hex( 1, 8, 32, lineShift );
-			log.writeln( color, String.format( "%1$sResponse: %2$d (0x%2$X)", shiftStr, response.size() ) );
+			log.writeln( color, String.format(  Locale.US, "%1$sResponse: %2$d (0x%2$X)", shiftStr, response.size() ) );
 			log.writeln( color, response_hex );
 
 			if( isTlvData )

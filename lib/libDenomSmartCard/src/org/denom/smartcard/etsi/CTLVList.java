@@ -4,6 +4,7 @@
 package org.denom.smartcard.etsi;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 import org.denom.*;
 
@@ -175,7 +176,7 @@ public class CTLVList
 			CTLV.appendTlvTag( tagBin, rec.tag );
 			res.append( tagBin.Hex() );
 
-			res.append( String.format( " [ %3d ] :  ", rec.val.size() ) );
+			res.append( String.format( Locale.US, " [ %3d ] :  ", rec.val.size() ) );
 
 			res.append( rec.val.Hex() );
 
