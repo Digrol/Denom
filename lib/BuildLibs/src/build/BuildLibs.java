@@ -8,23 +8,41 @@ import org.denom.log.LogConsole;
  */
 class BuildLibs
 {
-	static String BUILD_DATE = "2024.08.15";
+	static String BUILD_DATE = "2024.08.20";
 
 	static String ROOT = "../..";
 
 	static LogConsole log = new LogConsole();
 
-	// -----------------------------------------------------------------------------------------------------------------
+
 	static String[] excludeAndroid = {
 			"/build",
 			"/ecj",
 			"/swing",
 			"/testrunner",
-			"LICENSE.txt",
 			"LogColoredConsoleWindow.java", "LogColoredConsoleWindow.class",
-			"LogColoredTextPane.java",      "LogColoredTextPane.class"
+			"LogColoredTextPane.java",      "LogColoredTextPane.class",
+
+			"CardReaderPCSC.java",          "CardReaderPCSC.class",
+			"CardReaderPCSCNative.java",    "CardReaderPCSCNative.class",
+			"ReaderFactory.java",           "ReaderFactory.class",
+			"CardScript.java",              "CardScript.class",
+			"PanelSelectReader.java",       "PanelSelectReader.class",
+			"SecurityModuleSAM.java",       "SecurityModuleSAM.class"
 	};
 
+	// -----------------------------------------------------------------------------------------------------------------
+	public static void main( String[] args ) throws Exception
+	{
+		buildLib( "org.denom.common",         "libDenomCommon" );
+		buildLib( "org.denom.crypt",          "libDenomCrypt" );
+		buildLib( "org.denom.smartcard",      "libDenomSmartcard" );
+		buildLib( "org.denom.smartcard-full", "libDenomSmartcard", "libDenomCrypt", "libDenomCommon" );
+
+		buildLibAndroid( "org.denom.common", excludeAndroid, "libDenomCommon" );
+		buildLibAndroid( "org.denom.smartcard-full", excludeAndroid, "libDenomSmartcard", "libDenomCrypt", "libDenomCommon" );
+	}
+	
 	// -----------------------------------------------------------------------------------------------------------------
 	private static void buildLib( String jarPrefix, String... projectNames )
 	{
@@ -46,33 +64,23 @@ class BuildLibs
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private static void buildLibAndroid( String jarPrefix, String projectName )
+	private static void buildLibAndroid( String jarPrefix, String[] excludeAndroid, String... projectNames )
 	{
-		String libPath = ROOT + "/lib/" + projectName;
 		String jarName = ROOT + "/builds/libsAndroid/" + jarPrefix + "-android-" + BUILD_DATE + ".jar";
 
 		// Jar
 		JarBuilder jb = new JarBuilder( log, jarName );
 		jb.exclude( excludeAndroid );
-		jb.addDirectory( libPath + "/.bin" );
+		for( String projectName : projectNames )
+			jb.addDirectory( ROOT + "/lib/" + projectName + "/.bin" );
 		jb.close();
 
 		// Sources
 		jb = new JarBuilder( log, jarName.replace( ".jar", "-sources.jar" ) );
 		jb.exclude( excludeAndroid );
-		jb.addDirectory( libPath + "/src" );
+		for( String projectName : projectNames )
+			jb.addDirectory( ROOT + "/lib/" + projectName + "/src" );
 		jb.close();
-	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	public static void main( String[] args ) throws Exception
-	{
-		buildLib( "org.denom.common",         "libDenomCommon" );
-		buildLib( "org.denom.crypt",          "libDenomCrypt" );
-		buildLib( "org.denom.smartcard",      "libDenomSmartcard" );
-		buildLib( "org.denom.smartcard-full", "libDenomSmartcard", "libDenomCrypt", "libDenomCommon" );
-
-		buildLibAndroid( "org.denom.common", "libDenomCommon" );
 	}
 
 }
