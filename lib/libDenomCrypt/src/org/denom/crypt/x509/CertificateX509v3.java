@@ -19,8 +19,7 @@ import static org.denom.Ex.MUST;
 
 /**
  * https://www.rfc-editor.org/rfc/rfc5280
- * SGP.22 v2.5, 4.5.2.1.0.2, Certificates description. eUICC
- * Parse Binary with EUICC certificate into fields
+ * Parse Binary with X.509 certificate into fields
  */
 public class CertificateX509v3
 {

@@ -42,7 +42,7 @@ class BuildLibs
 		buildLibAndroid( "org.denom.common", excludeAndroid, "libDenomCommon" );
 		buildLibAndroid( "org.denom.smartcard-full", excludeAndroid, "libDenomSmartcard", "libDenomCrypt", "libDenomCommon" );
 	}
-	
+
 	// -----------------------------------------------------------------------------------------------------------------
 	private static void buildLib( String jarPrefix, String... projectNames )
 	{
