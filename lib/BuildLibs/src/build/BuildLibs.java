@@ -8,7 +8,7 @@ import org.denom.log.LogConsole;
  */
 class BuildLibs
 {
-	static String BUILD_DATE = "2024.08.20";
+	static String BUILD_DATE = "2024.09.03";
 
 	static String ROOT = "../..";
 
@@ -20,6 +20,7 @@ class BuildLibs
 			"/ecj",
 			"/swing",
 			"/testrunner",
+			"LICENSE.txt",
 			"LogColoredConsoleWindow.java", "LogColoredConsoleWindow.class",
 			"LogColoredTextPane.java",      "LogColoredTextPane.class",
 
