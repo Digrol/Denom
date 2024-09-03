@@ -91,7 +91,7 @@ public class UseASymCrypt
 
 		ECDSA ecdsa = new ECDSA( new Secp256r1() );
 		ecdsa.setPublic( cert.subjectPublicKey );
-		MUST( ecdsa.verifyStd( new SHA256().calc( cert.tbsCertificateFull ), cert.signatureValue ) );
+		MUST( cert.verifySignature( ecdsa ), "Wrong signature" );
 		log.writeln( Colors.GREEN_I, "Certificate sign is OK." );
 	}
 
