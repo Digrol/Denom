@@ -447,7 +447,7 @@ public class TagEmv
 	 * Cardholder Verification Method (CVM) Results.<br>
 	 * Indicates the results of the last CVM performed.
 	 */
-	public static final int CVM_Results
+	public static final int CVMResults
 	               = 0x9F34; //  --              |  3         |  b           |  Terminal              |
 
 	/**
@@ -472,14 +472,14 @@ public class TagEmv
 	 * Certification Authority Public Key Index ICC.<br>
 	 * Identifies the certification authority’s public key in conjunction with the RID.
 	 */
-	public static final int CertificationAuthorityPublicKeyIndexICC
+	public static final int CAPublicKeyIndexICC
 	               = 0x8F  ; //  '70', '77'      |  1         |  b           |  ICC                   |
 
 	/**
 	 * Certification Authority Public Key Index Terminal.<br>
 	 * Identifies the certification authority’s public key in conjunction with the RID.
 	 */
-	public static final int CertificationAuthorityPublicKeyIndexTerminal
+	public static final int CAPublicKeyIndexTerminal
 	               = 0x9F22; //  --              |  1         |  b           |  Terminal              |
 
 	/**
@@ -514,7 +514,7 @@ public class TagEmv
 	 * Dedicated File Name -- DF.<br>
 	 * Identifies the name of the DF as described in ISO/IEC 7816-4.
 	 */
-	public static final int DedicatedFileName
+	public static final int DFName
 	               = 0x84  ; //  '6F'            |  5-16      |  b           |  ICC                   |
 
 	// ------------------------------------------------------------------------------------------------
