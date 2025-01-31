@@ -197,94 +197,335 @@ public class TagKernel8
 	               = 0x9F8204; //  6             |  b               |  K                      |
 
 	/**
-	 * NAME.<br>
-	 * .
+	 * A.1.56  Extended SDA Tag List.<br>
+	 * Contains a list of the tags of data objects to be included
+	 * in the Static Data To Be Authenticated.
 	 */
-	public static final int T
-	               = 0xFFFF  ; //  1             |  n 2             |  K/ACT/DET              |
+	public static final int ExtendedSDATagList
+	               = 0x9F810A; //  var.          |  b               |  K/RA                   |
 
 	/**
-	 * NAME.<br>
-	 * .
+	 * A.1.62  Hold Time Value.<br>
+	 * Indicates the time that the field is to be turned off after the transaction
+	 * is completed if requested to do so by the Card. The Hold Time Value is in units of 100ms.
 	 */
-	public static final int T
-	               = 0xFFFF  ; //  1             |  n 2             |  K/ACT/DET              |
+	public static final int HoldTimeValue
+	               = 0x9F8212; //  1             |  b               |  K                      |
 
 	/**
-	 * NAME.<br>
-	 * .
+	 * A.1.63  IAD MAC Offset.<br>
+	 * Indicates the offset of the Issuer Application Data MAC in Issuer Application Data
+	 * when 'Copy IAD MAC in IAD' in Application Interchange Profile
+	 * indicates that the IAD MAC Offset must be used.
+	 * The offset is zero-based.
 	 */
-	public static final int T
-	               = 0xFFFF  ; //  1             |  n 2             |  K/ACT/DET              |
+	public static final int IAD_MACOffset
+	               = 0x9F8107; //  1             |  b               |  K/RA                   |
 
 	/**
-	 * NAME.<br>
-	 * .
+	 * A.1.64  ICC ECC Public Key (for RSA Certificates).<br>
+	 * The ICC ECC Public Key (x-coordinate of ICC ECC Public Key point) 
+	 * is returned in a record referenced in the AFL in case RSA certificates are used.
 	 */
-	public static final int T
-	               = 0xFFFF  ; //  1             |  n 2             |  K/ACT/DET              |
+	public static final int ICCECCPublicKey_RSACert
+	               = 0x9F810B; //  32, 66        |  b               |  K/RA                   |
 
 	/**
-	 * NAME.<br>
-	 * .
+	 * A.1.70  Issuer Application Data MAC.<br>
+	 * A MAC over static card data and transaction related data.
+	 * The Issuer Application Data MAC may be copied by the Kernel in the 
+	 * Issuer Application Data as indicated by 'Copy IAD MAC in IAD' in Application Interchange Profile.
 	 */
-	public static final int T
-	               = 0xFFFF  ; //  1             |  n 2             |  K/ACT/DET              |
+	public static final int IAD_MAC
+	               = 0x9F8109; //  8             |  b               |  K                      |
+
+	// ----------------------------------------------------------------------------------------
+	//            |    Tag    |      Length      |      Format      |         Update          |
+	// ----------------------------------------------------------------------------------------
 
 	/**
-	 * NAME.<br>
-	 * .
+	 * A.1.77  Kernel Configuration.<br>
+	 * Indicates the Kernel Configuration Options.
 	 */
-	public static final int T
-	               = 0xFFFF  ; //  1             |  n 2             |  K/ACT/DET              |
+	public static final int KernelConfiguration
+	               = 0x9F8209; //  2             |  b               |  K                      |
 
 	/**
-	 * NAME.<br>
-	 * .
+	 * A.1.79  Kernel Key Data.<br>
+	 * Used to transfer the (x, y) coordinates of the ephemeral kernel public 
+	 * key to the Card in the value field of the GET PROCESSING OPTIONS command.
 	 */
-	public static final int T
-	               = 0xFFFF  ; //  1             |  n 2             |  K/ACT/DET              |
+	public static final int KernelKeyData
+	               = 0x9E    ; //  <= 132        |  b               |  K                      |
 
 	/**
-	 * NAME.<br>
-	 * .
+	 * A.1.80  Kernel Qualifier.<br>
+	 * Indicates to the Card any Kernel specific data that it needs to communicate.
+	 * Kernel Qualifier is built by the Kernel with data from different configuration data objects.
 	 */
-	public static final int T
-	               = 0xFFFF  ; //  1             |  n 2             |  K/ACT/DET              |
+	public static final int KernelQualifier
+	               = 0x9F2B  ; //  8             |  b               |  K                      |
 
 	/**
-	 * NAME.<br>
-	 * .
+	 * A.1.81  Kernel Reserved TVR Mask.<br>
+	 * Determines which bits in the Terminal Verification Results cannot be 
+	 * altered by the Card TVR returned by the Card in the response to the 
+	 * GENERATE AC command. The bits set to 1b cannot be altered by the Card.
 	 */
-	public static final int T
-	               = 0xFFFF  ; //  1             |  n 2             |  K/ACT/DET              |
+	public static final int KernelReservedTVRMask
+	               = 0x9F821A; //  5             |  b               |  K                      |
 
 	/**
-	 * NAME.<br>
-	 * .
+	 * A.1.85  Maximum Relay Resistance Grace Period.<br>
+	 * The Minimum Relay Resistance Grace Period and Maximum Relay Resistance Grace Period
+	 * represent how far outside the window defined by the Card that the measured time may be
+	 * and yet still be considered acceptable. The Maximum Relay Resistance Grace Period
+	 * is expressed in units of hundreds of microseconds.
 	 */
-	public static final int T
-	               = 0xFFFF  ; //  1             |  n 2             |  K/ACT/DET              |
+	public static final int MaximumRelayResistanceGracePeriod
+	               = 0x9F8214; //  2             |  b               |  K                      |
 
 	/**
-	 * NAME.<br>
-	 * .
+	 * A.1.91  Message Hold Time.<br>
+	 * Indicates the default delay for the processing of the next MSG Signal.
+	 * The Message Hold Time is an integer in units of 100ms.
 	 */
-	public static final int T
-	               = 0xFFFF  ; //  1             |  n 2             |  K/ACT/DET              |
+	public static final int MessageHoldTime
+	               = 0x9F8211; //  3             |  n 6             |  K                      |
+
+	// ----------------------------------------------------------------------------------------
+	//            |    Tag    |      Length      |      Format      |         Update          |
+	// ----------------------------------------------------------------------------------------
 
 	/**
-	 * NAME.<br>
-	 * .
+	 * A.1.93  Message Identifiers On Restart.<br>
+	 * The Message Identifiers On Restart is a configuration data object that defines
+	 * the message identifiers that can be used by the Card in 'Message Identifier'
+	 * in Restart Indicator. Each byte of the data object contains one message identifier
+	 * as shown in Table A.21. Message Identifiers On Restart must only contain message identifiers 
+	 * that are supported by Process D.
 	 */
-	public static final int T
-	               = 0xFFFF  ; //  1             |  n 2             |  K/ACT/DET              |
+	public static final int MessageIdentifiersOnRestart
+	               = 0x9F821D; //  <= 32         |  b               |  K                      |
 
 	/**
-	 * NAME.<br>
-	 * .
+	 * A.1.95  Minimum Relay Resistance Grace Period.<br>
+	 * The Minimum Relay Resistance Grace Period and Maximum Relay Resistance Grace Period
+	 * represent how far outside the window defined by the Card
+	 * that the measured time may be and yet still be considered acceptable.
+	 * The Minimum Relay Resistance Grace Period is expressed in units of hundreds of microseconds.
 	 */
-	public static final int T
-	               = 0xFFFF  ; //  1             |  n 2             |  K/ACT/DET              |
+	public static final int MinimumRelayResistanceGracePeriod
+	               = 0x9F8213; //  2             |  b               |  K                      |
 
+	/**
+	 * A.1.98  Outcome Parameter Set.<br>
+	 * Used to indicate to the Terminal the outcome of the transaction processing by the Kernel.
+	 * Its value is an accumulation of results about applicable parts of the transaction.
+	 */
+	public static final int OutcomeParameterSet
+	               = 0x9F8210; //  8             |  b               |  K                      |
+
+	/**
+	 * A.1.103  Proceed To First Write Flag.<br>
+	 * Indicates that the Terminal will send no more requests to read data 
+	 * other than as indicated in Tags To Read. This data item indicates the 
+	 * point at which the Kernel shifts from the Card reading phase to the Card writing phase.
+	 */
+	public static final int ProceedToFirstWriteFlag
+	               = 0x9F8202; //  1             |  b               |  K/ACT/DET              |
+
+	/**
+	 * A.1.104  Reader Contactless Floor Limit.<br>
+	 * Indicates the transaction amount above which transactions must be authorised online.
+	 */
+	public static final int ReaderContactlessFloorLimit
+	               = 0x9F820D; //  6             |  n 12            |  K                      |
+
+	/**
+	 * A.1.105  Reader CVM Required Limit.<br>
+	 * Indicates the transaction amount above which the Kernel instantiates 
+	 * the CVM capabilities field in Terminal Capabilities with CVM Capability - CVM Required.
+	 */
+	public static final int ReaderCVMRequiredLimit
+	               = 0x9F820E; //  6             |  n 12            |  K                      |
+
+	// ----------------------------------------------------------------------------------------
+	//            |    Tag    |      Length      |      Format      |         Update          |
+	// ----------------------------------------------------------------------------------------
+
+	/**
+	 * A.1.106  Read Data Status.<br>
+	 * Information reported by the Kernel to the Terminal, about the processing of READ DATA commands.
+	 * Possible values are 'completed' or 'not completed'. In the latter case, 
+	 * this status is not specific about which of the READ DATA commands failed,
+	 * or about how many of these commands have failed or succeeded.
+	 * This data object is part of the Discretionary Data provided by the Kernel to the Terminal.
+	 */
+	public static final int ReadDataStatus
+	               = 0x9F821C; //  1             |  b               |  K                      |
+
+	/**
+	 * A.1.109  Relay Resistance Accuracy Threshold.<br>
+	 * Represents the threshold above which the Kernel considers the variation between
+	 * Measured Relay Resistance Processing Time and Min Time For Processing Relay Resistance APDU
+	 * no longer acceptable. The Relay Resistance Accuracy Threshold is expressed 
+	 * in units of hundreds of microseconds.
+	 */
+	public static final int RelayResistanceAccuracyThreshold
+	               = 0x9F8217; //  2             |  b               |  K                      |
+
+	/**
+	 * A.1.110  Relay Resistance Time Excess.<br>
+	 * Contains the excess time on top of the Max Time For Processing Relay Resistance APDU
+	 * used by the card to process the EXCHANGE RELAY RESISTANCE DATA command.
+	 * The Relay Resistance Time Excess is expressed in units of hundreds of microseconds.
+	 */
+	public static final int RelayResistanceTimeExcess
+	               = 0x9F810C; //  2             |  b               |  K                      |
+
+	/**
+	 * A.1.111  Relay Resistance Transmission Time Mismatch Threshold.<br>
+	 * Represents the threshold above which the Kernel considers the variation between
+	 * Device Estimated Transmission Time For Relay Resistance R-APDU and
+	 * Terminal Expected Transmission Time For Relay Resistance R-APDU no longer acceptable.
+	 * The Relay Resistance Transmission Time Mismatch Threshold is a percentage 
+	 * and expressed as an integer.
+	 */
+	public static final int RelayResistanceTransmissionTimeMismatchThreshold
+	               = 0x9F8218; //  2             |  b               |  K                      |
+
+	/**
+	 * A.1.113  Restart Indicator.<br>
+	 * Indicator returned by the Card that comprises two fields: an indication 
+	 * that restart is needed and a message indicator.
+	 */
+	public static final int RestartIndicator
+	               = 0x9F8108; //  2-5           |  b               |  K/RA                   |
+
+	// ----------------------------------------------------------------------------------------
+	//            |    Tag    |      Length      |      Format      |         Update          |
+	// ----------------------------------------------------------------------------------------
+
+	/**
+	 * A.1.115  Security Capability.<br>
+	 * Indicates the security capability of the Kernel (Table A.27).
+	 */
+	public static final int SecurityCapability
+	               = 0x9F820A; //  1             |  b               |  K                      |
+
+	/**
+	 * A.1.118  Tag Mapping List.<br>
+	 * List of tags for which the Kernel will use a mapped tag to populate the 
+	 * Data Record and Discretionary Data. The tags in the Tag Mapping List 
+	 * are coded according to the BER-TLV coding rules in section 4.7.1. 
+	 * The tags in the Tag Mapping List are ordered in pairs of two tags: 
+	 * { Tag1 MappedTag1 Tag2 MappedTag2 … Tagn  MappedTagn }.
+	 */
+	public static final int TagMappingList
+	               = 0x9F8221; //  var.          |  b               |  K                      |
+
+	/**
+	 * A.1.119  Tags To Read.<br>
+	 * List of tags indicating the data the Terminal has requested to be read. 
+	 * The tags in Tags To Read are coded according to the BER-TLV
+	 * coding rules in section 4.7.1.
+	 * This data object is present if the Terminal wants any data back from 
+	 * the Card before the Data Record. This could be in the context of data 
+	 * storage, or for non data storage usage reasons, for example the PAN.
+	 * This data object may contain configured data.
+	 * This data object may be provided several times by the Terminal. 
+	 * Therefore, the values of each of these tags must be accumulated in 
+	 * the Tags To Read Yet buffer.
+	 */
+	public static final int TagsToRead
+	               = 0x9F8203; //  var.          |  b               |  K/ACT/DET              |
+
+	/**
+	 * A.1.121  Terminal Action Code - Denial.<br>
+	 * Specifies the acquirer's conditions that cause the denial of a transaction
+	 * without attempting to go online.
+	 */
+	public static final int TerminalActionCodeDenial
+	               = 0x9F820B; //  5             |  b               |  K                      |
+
+	/**
+	 * A.1.122  Terminal Action Code - Online.<br>
+	 * Specifies the acquirer's conditions that cause a transaction
+	 * to be transmitted online on an online capable Terminal.
+	 */
+	public static final int TerminalActionCodeOnline
+	               = 0x9F820C; //  5             |  b               |  K                      |
+
+	// ----------------------------------------------------------------------------------------
+	//            |    Tag    |      Length      |      Format      |         Update          |
+	// ----------------------------------------------------------------------------------------
+
+	/**
+	 * A.1.125  Terminal Expected Transmission Time For Relay Resistance C-APDU.<br>
+	 * Represents the time that the Kernel expects to need for transmitting 
+	 * the EXCHANGE RELAY RESISTANCE DATA command to the Card.
+	 * The Terminal Expected Transmission Time For Relay Resistance 
+	 * C-APDU is expressed in units of hundreds of microseconds.
+	 */
+	public static final int TerminalExpectedTransmissionTimeForRelayResistanceCAPDU
+	               = 0x9F8215; //  2             |  b               |  K                      |
+
+	/**
+	 * A.1.126  Terminal Expected Transmission Time For Relay Resistance R-APDU.<br>
+	 * Represents the time that the Kernel expects that the Card will need for 
+	 * transmitting the EXCHANGE RELAY RESISTANCE DATA R-APDU.
+	 * The Terminal Expected Transmission Time For Relay Resistance 
+	 * R-APDU is expressed in units of hundreds of microseconds.
+	 */
+	public static final int TerminalExpectedTransmissionTimeForRelayResistanceRAPDU
+	               = 0x9F8216; //  2             |  b               |  K                      |
+
+	/**
+	 * A.1.132  Timeout Value.<br>
+	 * Defines the time in ms before the timer generates a TIMEOUT Signal.
+	 */
+	public static final int TimeoutValue
+	               = 0x9F820F; //  2             |  b               |  K                      |
+
+	/**
+	 * A.1.143  User Interface Request Data 1.<br>
+	 * The TLV Database of the Kernel includes two UIRDs: User Interface 
+	 * Request Data 1 and User Interface Request Data 2. A UIRD combines 
+	 * all user interface request parameters to be sent with the OUT Signal or MSG Signal.
+	 * User Interface Request Data 1 is included in the OUT Signal if at least 
+	 * one of the flags 'UI Request on Outcome Present' or 'UI Request on 
+	 * Restart Present' is set. If both flags are set, then User Interface 
+	 * Request Data 1 includes the user interface request parameters to be 
+	 * acted upon as the outcome is processed.
+	 * User Interface Request Data 2 is only included in the OUT Signal if 
+	 * both flags 'UI Request on Outcome Present' and 'UI Request on 
+	 * Restart Present' in Outcome Parameter Set are set. In this case, User 
+	 * Interface Request Data 2 includes the user interface request 
+	 * parameters to be acted upon at the restart of the transaction.
+	 */
+	public static final int UserInterfaceRequestData1
+	               = 0x9F8205; //  13            |  b               |  K                      |
+
+	/**
+	 * A.1.144  User Interface Request Data 2.<br>
+	 * Refer to description of User Interface Request Data 1.
+	 */
+	public static final int UserInterfaceRequestData2
+	               = 0x9F8219; //  13            |  b               |  K                      |
+
+	/**
+	 * A.1.145  Write Data Status.<br>
+	 * Information reported by the Kernel to the Terminal, about the processing of WRITE DATA commands.
+	 * Possible values are 'completed' or 'not completed'. In the latter case, 
+	 * this status is not specific about which of the WRITE DATA commands 
+	 * failed, or about how many of these commands have failed or succeeded.
+	 * This data object is part of the Discretionary Data provided by the Kernel to the Terminal.
+	 */
+	public static final int WriteDataStatus
+	               = 0x9F821B; //  1             |  b               |  K                      |
+
+	// ----------------------------------------------------------------------------------------
+	//            |    Tag    |      Length      |      Format      |         Update          |
+	// ----------------------------------------------------------------------------------------
 }
