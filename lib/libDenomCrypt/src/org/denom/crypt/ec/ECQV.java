@@ -17,7 +17,7 @@ import static org.denom.Ex.*;
  */
 public class ECQV
 {
-	private ECDSA issuerKey;
+	private ECAlg issuerKey;
 	private IHash hashAlg;
 	
 	// -----------------------------------------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ public class ECQV
 	 * Issuer private key must be set for certificate generation.
 	 * Issuer public key must be set for public and private key reconstruction.
 	 */
-	public ECQV( ECDSA issuerKey, IHash hashAlg )
+	public ECQV( ECAlg issuerKey, IHash hashAlg )
 	{
 		this.issuerKey = issuerKey;
 		this.hashAlg = hashAlg;
@@ -40,7 +40,7 @@ public class ECQV
 	 * @param privateKeyData - [out] private key reconstruction data.
 	 * @return reconstruction point.
 	 */
-	public Binary generateCert( final Binary idInfo, final ECDSA userPublicKey, Binary privateKeyData )
+	public Binary generateCert( final Binary idInfo, final ECAlg userPublicKey, Binary privateKeyData )
 	{
 		// reconstruction point
 		ECPoint Pu;
@@ -50,7 +50,7 @@ public class ECQV
 		
 		// issuer key pair (k, kG)
 		ECCurve ecCurve = issuerKey.getCurve();
-		ECDSA kkG = new ECDSA( ecCurve );
+		ECAlg kkG = new ECAlg( ecCurve );
 		
 		BigInteger n = ecCurve.getOrder();
 		BigInteger dCa = new BigInteger( 1, issuerKey.getPrivate().getBytes() );
@@ -88,7 +88,7 @@ public class ECQV
 	 * @param reconstructionPoint - public key reconstruction data.
 	 * @return reconstructed user public key.
 	 */
-	public ECDSA extractPublic( final Binary idInfo, final Binary reconstructionPoint )
+	public ECAlg extractPublic( final Binary idInfo, final Binary reconstructionPoint )
 	{
 		ECCurve ecCurve = issuerKey.getCurve();
 		BigInteger n = ecCurve.getOrder();
@@ -101,7 +101,7 @@ public class ECQV
 
 		// Qu = ePu + Qca
 		Binary Qu = Pu.multiply( e ).add( Qca ).getEncoded( false );
-		return new ECDSA( ecCurve ).setPublic( Qu );
+		return new ECAlg( ecCurve ).setPublic( Qu );
 	}
 	
 	// -----------------------------------------------------------------------------------------------------------------
@@ -114,10 +114,10 @@ public class ECQV
 	 * @param userPrivateKey - initial private key.
 	 * @return reconstructed user private key.
 	 */
-	public ECDSA extractPrivate( final Binary idInfo, final Binary reconstructionPoint, final Binary privateKeyData, 
-			final ECDSA userPrivateKey )
+	public ECAlg extractPrivate( final Binary idInfo, final Binary reconstructionPoint, final Binary privateKeyData, 
+			final ECAlg userPrivateKey )
 	{
-		ECDSA uPubKey = extractPublic( idInfo, reconstructionPoint );
+		ECAlg uPubKey = extractPublic( idInfo, reconstructionPoint );
 		
 		ECCurve ecCurve = userPrivateKey.getCurve();
 		BigInteger n = ecCurve.getOrder();
@@ -133,7 +133,7 @@ public class ECQV
 		// dU = r + e*kU (mod n)
 		BigInteger dU = r.add( e.multiply( kU ) ).mod( n );
 		
-		ECDSA uPrivKey = new ECDSA( ecCurve );
+		ECAlg uPrivKey = new ECAlg( ecCurve );
 		int mLen = ( ecCurve.getFieldSize() + 7 ) / 8;
 		uPrivKey.setPrivate( integerToOctetString( dU, mLen ) );
 		
@@ -151,7 +151,7 @@ public class ECQV
 	 * @param userPrivateKey - [out] calculated private key.
 	 * @return reconstruction point
 	 */
-	public Binary generateCertSelf( final Binary idInfo, ECDSA userPrivateKey )
+	public Binary generateCertSelf( final Binary idInfo, ECAlg userPrivateKey )
 	{
 		ECCurve ecCurve = issuerKey.getCurve();
 		BigInteger n = ecCurve.getOrder();
@@ -180,7 +180,7 @@ public class ECQV
 	 * @param reconstructionPoint - public key reconstruction data.
 	 * @return reconstructed user public key corresponding idInfo.
 	 */
-	public ECDSA extractPublicSelf( final Binary idInfo, final Binary reconstructionPoint )
+	public ECAlg extractPublicSelf( final Binary idInfo, final Binary reconstructionPoint )
 	{
 		ECCurve ecCurve = issuerKey.getCurve();
 		BigInteger n = ecCurve.getOrder();
@@ -190,7 +190,7 @@ public class ECQV
 		BigInteger e = calculateE( n, Bin( idInfo, reconstructionPoint ) );
 		Binary Qu = Pu.multiply( e ).getEncoded( false );
 		
-		return new ECDSA( ecCurve ).setPublic( Qu );
+		return new ECAlg( ecCurve ).setPublic( Qu );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

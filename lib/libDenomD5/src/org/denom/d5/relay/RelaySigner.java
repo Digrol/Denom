@@ -4,7 +4,7 @@
 package org.denom.d5.relay;
 
 import org.denom.*;
-import org.denom.crypt.ec.ECDSA;
+import org.denom.crypt.ec.ECAlg;
 import org.denom.crypt.ec.Fp.custom.Secp256r1;
 import org.denom.crypt.hash.*;
 import org.denom.format.JSONObject;
@@ -24,7 +24,7 @@ public class RelaySigner
 	 */
 	public static final int PUBLIC_KEY_SIZE = 32;
 
-	private ECDSA signAlg = new ECDSA( new Secp256r1() );
+	private ECAlg signAlg = new ECAlg( new Secp256r1() );
 	private IHash hashAlg = new SHA256();
 
 	private Binary publicKey;
@@ -49,7 +49,7 @@ public class RelaySigner
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	public ECDSA getAlgorithm()
+	public ECAlg getAlgorithm()
 	{
 		return signAlg;
 	}
@@ -121,13 +121,13 @@ public class RelaySigner
 	// -----------------------------------------------------------------------------------------------------------------
 	public synchronized Binary sign( final Binary data )
 	{
-		return signAlg.sign( hashAlg.calc( data ) );
+		return signAlg.signECDSA( hashAlg.calc( data ) );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	public synchronized boolean verify( final Binary data, final Binary sign )
 	{
-		return signAlg.verify( hashAlg.calc( data ), sign );
+		return signAlg.verifyECDSA( hashAlg.calc( data ), sign );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

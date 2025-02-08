@@ -11,7 +11,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 import org.denom.Binary;
-import org.denom.crypt.ec.ECDSA;
+import org.denom.crypt.ec.ECAlg;
 import org.denom.crypt.hash.SHA1;
 import org.denom.crypt.hash.SHA256;
 import org.denom.format.BerTLV;
@@ -241,18 +241,18 @@ public class CertificateX509v3
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	public boolean verifySignature( ECDSA signerPublicKey )
+	public boolean verifySignature( ECAlg signerPublicKey )
 	{
 		// iso(1) member-body(2) us(840) ansi-X9-62(10045) signatures(4) ecdsa-with-SHA2(3) ecdsa-with-SHA256(2)
 		if( signatureAlgorithm.equals( "06082A8648CE3D040302" ) ) // ASN1OID.toBin( "1.2.840.10045.4.3.2" )
 		{
-			return signerPublicKey.verifyStd( new SHA256().calc( tbsCertificateFull ), signatureValue );
+			return signerPublicKey.verifyECDSAStd( new SHA256().calc( tbsCertificateFull ), signatureValue );
 		}
 
 		// iso(1) member-body(2) us(840) ansi-X9-62(10045) signatures(4) ecdsa-with-SHA1(1)
 		if( signatureAlgorithm.equals( "06072A8648CE3D0401" ) )
 		{
-			return signerPublicKey.verifyStd( new SHA1().calc( tbsCertificateFull ), signatureValue );
+			return signerPublicKey.verifyECDSAStd( new SHA1().calc( tbsCertificateFull ), signatureValue );
 		}
 
 		return false;

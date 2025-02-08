@@ -1,3 +1,6 @@
+// Denom.org
+// Author:  Sergey Novochenko,  Digrol@gmail.com
+
 package org.denom.testcrypt.ec;
 
 import java.math.BigInteger;
@@ -173,17 +176,17 @@ public class TestF2mCurves
 	private void checkECMQV()
 	{
 		ECCurve curve = F2mCurves.sect163k1();
-		ECDSA static1 = new ECDSA( curve );
+		ECAlg static1 = new ECAlg( curve );
 		static1.setPrivate( Bin("03A41434AA99C2EF40C8495B2ED9739CB2155A1E0D") );
 		static1.setPublic( Bin("03037D529FA37E42195F10111127FFB2BB38644806BC") );
-		ECDSA ephe1 = new ECDSA( curve );
+		ECAlg ephe1 = new ECAlg( curve );
 		ephe1.setPrivate( Bin("032FC4C61A8211E6A7C4B8B0C03CF35F7CF20DBD52") );
 		ephe1.setPublic( Bin("02015198E74BC2F1E5C9A62B80248DF0D62B9ADF8429" ) );
 
-		ECDSA static2 = new ECDSA( curve );
+		ECAlg static2 = new ECAlg( curve );
 		static2.setPrivate( Bin("0057E8A78E842BF4ACD5C315AA0569DB1703541D96") );
 		static2.setPublic( Bin("03072783FAAB9549002B4F13140B88132D1C75B3886C") );
-		ECDSA ephe2 = new ECDSA( curve );
+		ECAlg ephe2 = new ECAlg( curve );
 		ephe2.setPrivate( Bin("02BD198B83A667A8D908EA1E6F90FD5C6D695DE94F") );
 		ephe2.setPublic( Bin("03067E3AEA3510D69E8EDD19CB2A703DDC6CF5E56E32") );
 

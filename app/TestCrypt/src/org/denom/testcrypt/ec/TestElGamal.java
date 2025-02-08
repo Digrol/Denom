@@ -1,3 +1,6 @@
+// Denom.org
+// Author:  Sergey Novochenko,  Digrol@gmail.com
+
 package org.denom.testcrypt.ec;
 
 import java.math.BigInteger;
@@ -17,7 +20,7 @@ public class TestElGamal
 		log.write( getClass().getSimpleName() + "... " );
 
 		ECCurve curve = FpCurves.secp192r1();
-		ECDSA ecdsa = new ECDSA( curve ).generateKeyPair();
+		ECAlg ecdsa = new ECAlg( curve ).generateKeyPair();
 
 		BigInteger N = curve.getOrder();
 		BigInteger val = BigInteger.valueOf( 20 );
@@ -38,12 +41,12 @@ public class TestElGamal
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private void doTest( ECDSA ecdsa, BigInteger value )
+	private void doTest( ECAlg ecdsa, BigInteger value )
 	{
 		ECPoint data = ecdsa.getCurve().GMul( value );
 		ECPoint[] pair = ecdsa.encrypt( data );
 
-		ECDSA ec2 = ecdsa.clone().generateKeyPair();
+		ECAlg ec2 = ecdsa.clone().generateKeyPair();
 		ECPoint[] srcPair = pair;
 
 		// re-encrypt the message portion
@@ -56,7 +59,7 @@ public class TestElGamal
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private void doSameKeyTest( ECDSA ecdsa, BigInteger value )
+	private void doSameKeyTest( ECAlg ecdsa, BigInteger value )
 	{
 		ECPoint data = ecdsa.getCurve().GMul( value );
 		ECPoint[] pair = ecdsa.encrypt( data );

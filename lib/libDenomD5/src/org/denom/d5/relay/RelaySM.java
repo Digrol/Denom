@@ -5,7 +5,7 @@ package org.denom.d5.relay;
 
 import org.denom.*;
 import org.denom.crypt.*;
-import org.denom.crypt.ec.ECDSA;
+import org.denom.crypt.ec.ECAlg;
 import org.denom.crypt.hash.SHA256;
 import org.denom.format.*;
 
@@ -19,7 +19,7 @@ import static org.denom.Ex.MUST;
 public class RelaySM
 {
 	private final RelaySigner myStaticKey;
-	private ECDSA myEphemeralKey;
+	private ECAlg myEphemeralKey;
 	public Binary otherStaticPublic;
 
 	// Сессионные ключи

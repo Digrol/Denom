@@ -1,3 +1,6 @@
+// Denom.org
+// Author:  Sergey Novochenko,  Digrol@gmail.com
+
 package org.denom.testcrypt.ec;
 
 import java.math.BigInteger;
@@ -166,26 +169,26 @@ class CheckEC
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	static void fixedSign( ECCurve curve, String privateD, String publicQ, String msg, String fixedK, String fixedSign )
+	static void fixedSign( ECCurve curve, String privateD, String publicQ, String hash, String fixedK, String fixedSign )
 	{
-		ECDSA ecdsa = new ECDSA( curve ).setPrivate( Bin(privateD) ).setPublic( Bin(publicQ) );
+		ECAlg ecdsa = new ECAlg( curve ).setPrivate( Bin(privateD) ).setPublic( Bin(publicQ) );
 		ecdsa.setFixedK( Bin(fixedK) );
-		Binary sign = ecdsa.sign( Bin(msg) );
+		Binary sign = ecdsa.signECDSA( Bin(hash) );
 		MUST( sign.equals( fixedSign ), "Wrong sign" );
-		MUST( ecdsa.verify( Bin(msg), sign ), "Wrong verify" );
+		MUST( ecdsa.verifyECDSA( Bin(hash), sign ), "Wrong verify" );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	static void cross( ILog log, String curveName,  ECCurve commonCurve,  ECCurve customCurve, int signsNumber )
 	{
-		ECDSA std = new ECDSA( commonCurve );
-		ECDSA custom = new ECDSA( customCurve );
+		ECAlg std = new ECAlg( commonCurve );
+		ECAlg custom = new ECAlg( customCurve );
 		crossSign( log, curveName, std, custom, signsNumber );
 		measureCrossSigns( log, curveName, std, custom, signsNumber );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	static void crossSign( ILog log, String curveName, ECDSA std, ECDSA custom, int signsNumber )
+	static void crossSign( ILog log, String curveName, ECAlg std, ECAlg custom, int signsNumber )
 	{
 		log.write( "Cross check " );
 		log.write( 0xFFFFA0A0, curveName );
@@ -197,16 +200,16 @@ class CheckEC
 			std.generateKeyPair();
 			custom.setPrivate( std.getPrivate() ).setPublic( std.getPublic() );
 
-			Binary sign = std.sign( hash );
-			MUST( std.verify( hash, sign ) );
-			MUST( custom.verify( hash, sign ) );
+			Binary sign = std.signECDSA( hash );
+			MUST( std.verifyECDSA( hash, sign ) );
+			MUST( custom.verifyECDSA( hash, sign ) );
 
 			custom.generateKeyPair();
 			std.setPrivate( custom.getPrivate() ).setPublic( custom.getPublic() );
 
-			sign = custom.sign( hash );
-			MUST( custom.verify( hash, sign ) );
-			MUST( std.verify( hash, sign ) );
+			sign = custom.signECDSA( hash );
+			MUST( custom.verifyECDSA( hash, sign ) );
+			MUST( std.verifyECDSA( hash, sign ) );
 		}
 		log.writeln( Colors.GREEN_I, "OK" );
 	}
@@ -218,7 +221,7 @@ class CheckEC
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	static void measureAlg( ILog log, String name, ECDSA alg, int signsNumber )
+	static void measureAlg( ILog log, String name, ECAlg alg, int signsNumber )
 	{
 		Binary hash = new SHA256().calc( Bin().random( 32 ) );
 
@@ -226,11 +229,11 @@ class CheckEC
 		long t = Ticker.measureMs( signsNumber, () -> alg.generateKeyPair() );
 		log.write( Colors.CYAN_I, pad("" + t, 8) );
 
-		t = Ticker.measureMs( signsNumber, () -> alg.sign( hash ) );
+		t = Ticker.measureMs( signsNumber, () -> alg.signECDSA( hash ) );
 		log.write( Colors.CYAN_I, pad("" + t, 8) );
 		
-		Binary sign = alg.sign( hash ); 
-		t = Ticker.measureMs( signsNumber, () -> alg.verify( hash, sign ) );
+		Binary sign = alg.signECDSA( hash ); 
+		t = Ticker.measureMs( signsNumber, () -> alg.verifyECDSA( hash, sign ) );
 		log.writeln( Colors.CYAN_I, pad("" + t, 8) );
 	}
 
@@ -241,12 +244,12 @@ class CheckEC
 		log.write( 0xFFFFA0A0, curveName );
 		log.writeln(" (" + signsNumber + "):" );
 		log.writeln( 0xFFFF80FF, "        generate    sign  verify" );
-		measureAlg( log, "", new ECDSA( curve ), signsNumber );
+		measureAlg( log, "", new ECAlg( curve ), signsNumber );
 		log.writeln( Colors.DARK_GRAY, "--------------------------------" );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	static void measureCrossSigns( ILog log, String curveName, ECDSA common, ECDSA custom, int signsNumber )
+	static void measureCrossSigns( ILog log, String curveName, ECAlg common, ECAlg custom, int signsNumber )
 	{
 		log.write( "Measure " );
 		log.write( 0xFFFFA0A0, curveName );

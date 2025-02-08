@@ -1,3 +1,6 @@
+// Denom.org
+// Author:  Sergey Novochenko,  Digrol@gmail.com
+
 package org.denom.testcrypt.ec;
 
 import java.security.*;

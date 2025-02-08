@@ -53,13 +53,13 @@ public class AES extends ABlockCipher
 	@Override
 	public int getKeySize()
 	{
-		return 16;
+		return m_key.size();
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private static void checkKeySize( int key_size )
+	private static void checkKeySize( int keySize )
 	{
-		MUST( (key_size == 16) || (key_size == 24) || (key_size == 32), "Invalid AES key size" );
+		MUST( (keySize == 16) || (keySize == 24) || (keySize == 32), "Invalid AES key size" );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -916,5 +916,5 @@ public class AES extends ABlockCipher
 
 		return last;
 	}
-	
+
 }

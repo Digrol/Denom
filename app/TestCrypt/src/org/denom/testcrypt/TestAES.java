@@ -1,5 +1,6 @@
 // Denom.org
 // Author:  Evgeny Ksenofontov,  om1chcode@gmail.com
+// Author:  Sergey Novochenko,  Digrol@gmail.com
 
 package org.denom.testcrypt;
 
@@ -15,7 +16,7 @@ public class TestAES
 {
 	private LogConsole log = new LogConsole();
 
-	static final int ITERATIONS = 1000;
+	static final int ITERATIONS = 3000;
 	static final int DATA_SIZE = 2000;
 
 	private static final int BLOCK_SIZE = AES.BLOCK_SIZE;
@@ -96,7 +97,9 @@ public class TestAES
 		measure( data, key, CryptoMode.CBC, iv );
 
 		checkCMAC();
-		
+
+		checkCTR();
+
 		log.writeln( "TestAES - OK" );
 	}
 
@@ -148,6 +151,44 @@ public class TestAES
 		checkCMAC( key, testData.first( 20 ), null, Bin("156727DC 0878944A 023C1FE0 3BAD6D93") );
 		// Example #4
 		checkCMAC( key, testData.first( 64 ), null, Bin("E1992190 549F6ED5 696A2C05 6C315410") );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	void checkCTR()
+	{
+		// ISO 10116 Example - Annex D.3.5.1 Counter mode
+		checkCTR(
+				Bin("2B7E151628AED2A6ABF7158809CF4F3C"),
+				Bin("F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF"),
+				Bin("6BC1BEE22E409F96E93D7E117393172A AE2D8A571E03AC9C9EB76FAC45AF8E51"),
+				Bin("874D6191B620E3261BEF6864990DB6CE 9806F66B7970FDFF8617187BB9FFFDFF") );
+
+		// EMV Contactless Book E, Cryptography Worked Examples v1.0.1, 6.1  BDH Key Agreement, Blinding factor validation
+		checkCTR(
+				Bin("88655CFD79DF9E9DDDEAF9EC0C538DC5"),
+				Bin("8000").add( Bin(14) ),
+				Bin("8C5AE5C30D3164A755D101C50646F405A06761562EC0CCF940D2B6E67CE2F1F8"),
+				Bin("4A7653A86A6AE421DB875BF695F31C8631C1EDB721EBFCBB3057C87DB03EEA7A") );
+
+		checkCTR(
+				Bin("88655CFD79DF9E9DDDEAF9EC0C538DC5"),
+				Bin("8001").add( Bin(14) ),
+				Bin("5A08541333900000151357125413339000001513D29122010000000000005F24032912319F420209789F0702FF005F3401019F810A038C9F06"),
+				Bin("0179C459B24A72C6D9359091CFE515E67FC1F8CD1C980DDB5585F82D6C4234A409185CC388AAF6E9D7636FC6E6A1A702F47625A5951A7908D0") );
+
+		checkCTR(
+				Bin("88655CFD79DF9E9DDDEAF9EC0C538DC5"),
+				Bin("8003").add( Bin(14) ),
+				Bin("9F8113081122334455AABBCC"),
+				Bin("44BD326A7CF2529D815B0868") );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	void checkCTR( Binary key, Binary SV, Binary data, Binary crypt )
+	{
+		AES aes = new AES( key );
+		MUST( aes.cryptCTR( data, SV ).equals( crypt ), "Wrong CTR" );
+		MUST( aes.cryptCTR( crypt, SV ).equals( data ), "Wrong CTR" );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

@@ -1,3 +1,6 @@
+// Denom.org
+// Author:  Sergey Novochenko,  Digrol@gmail.com
+
 package org.denom.testcrypt.ec;
 
 import java.math.BigInteger;
@@ -200,8 +203,8 @@ public class TestFpCurves
 	// -----------------------------------------------------------------------------------------------------------------
 	private void checkECDH()
 	{
-		ECDSA p1 = new ECDSA( FpCurves.prime239v1() ).generateKeyPair();
-		ECDSA p2 = new ECDSA( FpCurves.prime239v1() ).generateKeyPair();
+		ECAlg p1 = new ECAlg( FpCurves.prime239v1() ).generateKeyPair();
+		ECAlg p2 = new ECAlg( FpCurves.prime239v1() ).generateKeyPair();
 		Binary k1 = p1.calcDH( p2.getPublic() );
 		Binary k2 = p2.calcDH( p1.getPublic() );
 		MUST( k1.equals( k2 ) );
@@ -210,8 +213,8 @@ public class TestFpCurves
 		k2 = p2.calcDHC( p1.getPublic() );
 		MUST( k1.equals( k2 ) );
 
-		p1 = new ECDSA( new Curve25519() ).generateKeyPair();
-		p2 = new ECDSA( new Curve25519() ).generateKeyPair();
+		p1 = new ECAlg( new Curve25519() ).generateKeyPair();
+		p2 = new ECAlg( new Curve25519() ).generateKeyPair();
 		k1 = p1.calcDH( p2.getPublic() );
 		k2 = p2.calcDH( p1.getPublic() );
 		MUST( k1.equals( k2 ) );
@@ -221,17 +224,17 @@ public class TestFpCurves
 	private void checkECDHCUnified()
 	{
 		FpCurve curve = FpCurves.secp224r1();
-		ECDSA static1 = new ECDSA( curve );
+		ECAlg static1 = new ECAlg( curve );
 		static1.setPrivate( Bin("86d1735ca357890aeec8eccb4859275151356ecee9f1b2effb76b092") );
 		static1.setPublic( Bin("02 0784e946ef1fae0cfe127042a310a018ba639d3f6b41f265904f0a7b") );
-		ECDSA ephe1 = new ECDSA( curve );
+		ECAlg ephe1 = new ECAlg( curve );
 		ephe1.setPrivate( Bin("764010b3137ef8d34a3552955ada572a4fa1bb1f5289f27c1bf18344") );
 		ephe1.setPublic( Bin("02 b33713dc0d56215be26ee6c5e60ad36d12e02e78529ae3ff07873c6b" ) );
 
-		ECDSA static2 = new ECDSA( curve );
+		ECAlg static2 = new ECAlg( curve );
 		static2.setPrivate( Bin("e37964e391f5058fb43435352a9913438a1ec10831f755273285230a") );
 		static2.setPublic( Bin("02 84c22d9575d09e280613c8758467f84869c6eede4f6c1b644517d6a7") );
-		ECDSA ephe2 = new ECDSA( curve );
+		ECAlg ephe2 = new ECAlg( curve );
 		ephe2.setPrivate( Bin("ab40d67f59ba7265d8ad33ade8f704d13a7ba2298b69172a7cd02515") );
 		ephe2.setPublic( Bin("02 4b917e9ce693b277c8095e535ea81c2dea089446a8c55438eda750fb" ) );
 
@@ -242,17 +245,17 @@ public class TestFpCurves
 
 		// -------------------------------------------------------------------------------------------------------------
 		curve = FpCurves.secp256r1();
-		static1 = new ECDSA( curve );
+		static1 = new ECAlg( curve );
 		static1.setPrivate( Bin("2eb7ef76d4936123b6f13035045aedf45c1c7731f35d529d25941926b5bb38bb") );
 		static1.setPublic( Bin("02 7581b35964a983414ebdd56f4ebb1ddcad10881b200666a51ae41306e1ecf1db") );
-		ephe1 = new ECDSA( curve );
+		ephe1 = new ECAlg( curve );
 		ephe1.setPrivate( Bin("78acde388a022261767e6b3dd6dd016c53b70a084260ec87d395aec761c082de") );
 		ephe1.setPublic( Bin("02 5b1e4cdeb0728333c0a51631b1a75269e4878d10732f4cb94d600483db4bd9ee" ) );
 
-		static2 = new ECDSA( curve );
+		static2 = new ECAlg( curve );
 		static2.setPrivate( Bin("9c85898640a1b1de8ce7f557492dc1460530b9e17afaaf742eb953bb644e9c5a") );
 		static2.setPublic( Bin("02 e4916d616803ff1bd9569f35b7d06f792f19c1fb4e6fa916d686c027a17d8dff") );
-		ephe2 = new ECDSA( curve );
+		ephe2 = new ECAlg( curve );
 		ephe2.setPrivate( Bin("d6e11d5d3b85b201b8f4c12dadfad3000e267961a806a0658a2b859d44389599") );
 		ephe2.setPublic( Bin("02 d1cd23c29d0fc865c316d44a1fd5adb6605ee47c9ddfec3a9b0a5e532d52704e") );
 
@@ -266,10 +269,10 @@ public class TestFpCurves
 	private void checkECMQV()
 	{
 		FpCurve curve = FpCurves.prime239v1();
-		ECDSA static1 = new ECDSA( curve ).generateKeyPair();
-		ECDSA ephe1 = new ECDSA( curve ).generateKeyPair();
-		ECDSA static2 = new ECDSA( curve ).generateKeyPair();
-		ECDSA ephe2 = new ECDSA( curve ).generateKeyPair();
+		ECAlg static1 = new ECAlg( curve ).generateKeyPair();
+		ECAlg ephe1 = new ECAlg( curve ).generateKeyPair();
+		ECAlg static2 = new ECAlg( curve ).generateKeyPair();
+		ECAlg ephe2 = new ECAlg( curve ).generateKeyPair();
 
 		Binary x1 = static1.calcMQVAgreement( ephe1, static2.getPublic(), ephe2.getPublic() );
 		Binary x2 = static2.calcMQVAgreement( ephe2, static1.getPublic(), ephe1.getPublic() );
@@ -278,17 +281,17 @@ public class TestFpCurves
 		// -------------------------------------------------------------------------------------------------------------
 		curve = FpCurves.secp160r1();
 
-		static1 = new ECDSA( curve );
+		static1 = new ECAlg( curve );
 		static1.setPrivate( Bin("AA374FFC3CE144E6B073307972CB6D57B2A4E982") );
 		static1.setPublic( Bin("02 51B4496FECC406ED0E75A24A3C03206251419DC0") );
-		ephe1 = new ECDSA( curve );
+		ephe1 = new ECAlg( curve );
 		ephe1.setPrivate( Bin("149EC7EA3A220A887619B3F9E5B4CA51C7D1779C") );
 		ephe1.setPublic( Bin("03 D99CE4D8BF52FA20BD21A962C6556B0F71F4CA1F" ) );
 
-		static2 = new ECDSA( curve );
+		static2 = new ECAlg( curve );
 		static2.setPrivate( Bin("45FB58A92A17AD4B15101C66E74F277E2B460866") );
 		static2.setPublic( Bin("03 49B41E0E9C0369C2328739D90F63D56707C6E5BC") );
-		ephe2 = new ECDSA( curve );
+		ephe2 = new ECAlg( curve );
 		ephe2.setPrivate( Bin("18C13FCED9EADF884F7C595C8CB565DEFD0CB41E") );
 		ephe2.setPublic( Bin("02 706E5D6E1F640C6E9C804E75DBC14521B1E5F3B5" ) );
 

@@ -243,7 +243,7 @@ public class TagEmv
 
 	/**
 	 * Application Usage Control.<br>
-	 * Indicates issuer’s specified restrictions on the geographic usage
+	 * Indicates issuer's specified restrictions on the geographic usage
 	 * and services allowed for the application.
 	 */
 	public static final int ApplicationUsageControl
@@ -470,14 +470,14 @@ public class TagEmv
 
 	/**
 	 * Certification Authority Public Key Index ICC.<br>
-	 * Identifies the certification authority’s public key in conjunction with the RID.
+	 * Identifies the certification authority's public key in conjunction with the RID.
 	 */
 	public static final int CAPublicKeyIndexICC
 	               = 0x8F  ; //  '70', '77'      |  1         |  b           |  ICC                   |
 
 	/**
 	 * Certification Authority Public Key Index Terminal.<br>
-	 * Identifies the certification authority’s public key in conjunction with the RID.
+	 * Identifies the certification authority's public key in conjunction with the RID.
 	 */
 	public static final int CAPublicKeyIndexTerminal
 	               = 0x9F22; //  --              |  1         |  b           |  Terminal              |
@@ -704,7 +704,7 @@ public class TagEmv
 
 	/**
 	 * Issuer Action Code - Default.<br>
-	 * Specifies the issuer’s conditions that cause a transaction to be rejected if it might have
+	 * Specifies the issuer's conditions that cause a transaction to be rejected if it might have
 	 * been approved online, but the terminal is unable to process the transaction online.
 	 */
 	public static final int IssuerActionCodeDefault
@@ -712,7 +712,7 @@ public class TagEmv
 
 	/**
 	 * Issuer Action Code - Denial.<br>
-	 * Specifies the issuer’s conditions that cause the denial 
+	 * Specifies the issuer's conditions that cause the denial 
 	 * of a transaction without attempt to go online.
 	 */
 	public static final int IssuerActionCodeDenial
@@ -720,7 +720,7 @@ public class TagEmv
 
 	/**
 	 * Issuer Action Code - Online.<br>
-	 * Specifies the issuer’s conditions that cause a transaction to be transmitted online.
+	 * Specifies the issuer's conditions that cause a transaction to be transmitted online.
 	 */
 	public static final int IssuerActionCodeOnline
 	               = 0x9F0F; //  '70', '77'      |  5         |  b           |  ICC                   |
@@ -860,7 +860,7 @@ public class TagEmv
 
 	/**
 	 * Issuer URL.<br>
-	 * The URL provides the location of the Issuer’s Library Server on the Internet.
+	 * The URL provides the location of the Issuer's Library Server on the Internet.
 	 */
 	public static final int IssuerURL
 	               = 0x5F50; //  'BF0C', '73'    |  var.      |  ans         |  ICC                   |

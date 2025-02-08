@@ -1,5 +1,6 @@
 // Denom.org
 // Author:  Evgeny Ksenofontov,  om1chcode@gmail.com
+// Author:  Sergey Novochenko,  Digrol@gmail.com
 
 package org.denom.testcrypt;
 
@@ -33,11 +34,30 @@ public class TestDES3
 		checkDES3( data, key, CryptoMode.CFB, iv );
 		checkDES3( data, key, CryptoMode.OFB, iv );
 
+		checkCTR();
+
 		key = Bin().random( 16 );
 		data = Bin().random( DATA_SIZE );
 		iv = new Binary( 8 );
 
 		measure( data, key, CryptoMode.CBC, iv );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	static void checkCTR()
+	{
+		checkCTR( new DES3_EDE( Bin("0123456789ABCDEF 23456789ABCDEF01 456789ABCDEF0123") ),
+				Bin("0000000000000000"),
+				Bin("4E6F772069732074 68652074696D6520 666F7220616C6C20"),
+				Bin("00D504BCF0F8EB14 36DBD9F88BC05C6C E9A3D9160F9960EE") );
+
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	static void checkCTR( ABlockCipher cipher, Binary SV, Binary data, Binary crypt )
+	{
+		MUST( cipher.cryptCTR( data, SV ).equals( crypt ), "Wrong CTR" );
+		MUST( cipher.cryptCTR( crypt, SV ).equals( data ), "Wrong CTR" );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

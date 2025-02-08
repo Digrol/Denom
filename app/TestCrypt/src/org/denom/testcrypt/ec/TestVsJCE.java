@@ -1,3 +1,6 @@
+// Denom.org
+// Author:  Sergey Novochenko,  Digrol@gmail.com
+
 package org.denom.testcrypt.ec;
 
 import org.denom.*;
@@ -23,14 +26,14 @@ public class TestVsJCE
 	{
 		this.signsNumber = signsNumber;
 		ECDSAStd std = new ECDSAStd();
-		ECDSA custom = new ECDSA( new Secp256r1() );
+		ECAlg custom = new ECAlg( new Secp256r1() );
 
 		crossCheck( log, std, custom );
 		measure( log, std, custom );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private void crossCheck( ILog log, ECDSAStd std, ECDSA custom )
+	private void crossCheck( ILog log, ECDSAStd std, ECAlg custom )
 	{
 		log.write( "Cross check 'Secp256r1' vs. JCE ... " );
 
@@ -42,14 +45,14 @@ public class TestVsJCE
 
 			Binary data = Bin().random( 32 );
 			Binary hash = new SHA256().calc( data );
-			MUST( std.verify( data, custom.signStd( hash ) ) );
-			MUST( custom.verifyStd( hash, std.sign( data ) ) );
+			MUST( std.verify( data, custom.signECDSAStd( hash ) ) );
+			MUST( custom.verifyECDSAStd( hash, std.sign( data ) ) );
 
 			std.generateKeyPair();
 			custom.setPublicX509( std.getPublicKeyX509() );
 			custom.setPrivatePKCS8( std.getPrivateKeyPKCS8() );
-			MUST( std.verify( data, custom.signStd( hash ) ) );
-			MUST( custom.verifyStd( hash, std.sign( data ) ) );
+			MUST( std.verify( data, custom.signECDSAStd( hash ) ) );
+			MUST( custom.verifyECDSAStd( hash, std.sign( data ) ) );
 		}
 		log.writeln( Colors.GREEN_I, "OK" );
 	}
@@ -62,7 +65,7 @@ public class TestVsJCE
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private void measure( ILog log, ECDSAStd std, ECDSA custom )
+	private void measure( ILog log, ECDSAStd std, ECAlg custom )
 	{
 		Binary hash = Bin().random( 32 );
 
@@ -86,11 +89,11 @@ public class TestVsJCE
 		t = Ticker.measureMs( signsNumber, () -> custom.generateKeyPair() );
 		log.write( Colors.CYAN_I, pad("" + t, 8) );
 		
-		t = Ticker.measureMs( signsNumber, () -> custom.sign( hash ) );
+		t = Ticker.measureMs( signsNumber, () -> custom.signECDSA( hash ) );
 		log.write( Colors.CYAN_I, pad("" + t, 8) );
 
-		Binary sign = custom.sign( hash ); 
-		t = Ticker.measureMs( signsNumber, () -> custom.verify( hash, sign ) );
+		Binary sign = custom.signECDSA( hash ); 
+		t = Ticker.measureMs( signsNumber, () -> custom.verifyECDSA( hash, sign ) );
 		log.writeln( Colors.CYAN_I, pad("" + t, 8) );
 
 		log.writeln( Colors.DARK_GRAY, "--------------------------------" );

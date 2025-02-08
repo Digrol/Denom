@@ -117,6 +117,24 @@ public class DES3_EDE extends ABlockCipher
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public void encryptBlock( Binary block )
+	{
+		des1.encryptBlock( block );
+		des2.decryptBlock( block );
+		des3.encryptBlock( block );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	@Override
+	public void decryptBlock( Binary block )
+	{
+		des3.decryptBlock( block );
+		des2.encryptBlock( block );
+		des1.decryptBlock( block );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Зашифровать данные.
 	 * @param data Входные данные
@@ -197,35 +215,23 @@ public class DES3_EDE extends ABlockCipher
 			switch( crypt_mode )
 			{
 				case ECB:
-					des1.encryptBlock( temp_block );
-					des2.decryptBlock( temp_block );
-					des3.encryptBlock( temp_block );
+					encryptBlock( temp_block );
 					break;
 
 				case CBC:
 					temp_block.xor( temp_IV );
-
-					des1.encryptBlock( temp_block );
-					des2.decryptBlock( temp_block );
-					des3.encryptBlock( temp_block );
-
+					encryptBlock( temp_block );
 					temp_IV.assign( temp_block );
 					break;
 
 				case CFB:
-					des1.encryptBlock( temp_IV );
-					des2.decryptBlock( temp_IV );
-					des3.encryptBlock( temp_IV );
-
+					encryptBlock( temp_IV );
 					temp_block.xor( temp_IV );
 					temp_IV.assign( temp_block );
 					break;
 
 				case OFB:
-					des1.encryptBlock( temp_IV );
-					des2.decryptBlock( temp_IV );
-					des3.encryptBlock( temp_IV );
-
+					encryptBlock( temp_IV );
 					temp_block.xor( temp_IV );
 					break;
 			}
@@ -333,38 +339,25 @@ public class DES3_EDE extends ABlockCipher
 			switch( crypt_mode )
 			{
 				case ECB:
-					des3.decryptBlock( temp_block );
-					des2.encryptBlock( temp_block );
-					des1.decryptBlock( temp_block );
+					decryptBlock( temp_block );
 					break;
 
 				case CBC:
 					prev_IV.assign( temp_block );
-
-					des3.decryptBlock( temp_block );
-					des2.encryptBlock( temp_block );
-					des1.decryptBlock( temp_block );
-
+					decryptBlock( temp_block );
 					temp_block.xor( temp_IV );
 					temp_IV.assign( prev_IV );
 					break;
 
 				case CFB:
 					prev_IV.assign( temp_block );
-
-					des1.encryptBlock( temp_IV );
-					des2.decryptBlock( temp_IV );
-					des3.encryptBlock( temp_IV );
-
+					encryptBlock( temp_IV );
 					temp_block.xor( temp_IV );
 					temp_IV.assign( prev_IV );
 					break;
 
 				case OFB:
-					des1.encryptBlock( temp_IV );
-					des2.decryptBlock( temp_IV );
-					des3.encryptBlock( temp_IV );
-
+					encryptBlock( temp_IV );
 					temp_block.xor( temp_IV );
 					break;
 			}

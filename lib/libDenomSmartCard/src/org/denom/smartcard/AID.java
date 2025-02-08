@@ -33,7 +33,11 @@ public class AID
 	public static final String CHINA_UPAY      = "A000000333 0101";
 	public static final String NSPK_MIR        = "A000000658 1010";
 
+	// PSE (Payment System Environment)
+	public static final String PSE_STR         = "1PAY.SYS.DDF01";
 	public static final String PSE             = "315041592E5359532E4444463031"; // 1PAY.SYS.DDF01
+	// PPSE (Proximity Payment System Environment)
+	public static final String PPSE_STR        = "2PAY.SYS.DDF01";
 	public static final String PPSE            = "325041592E5359532E4444463031"; // 2PAY.SYS.DDF01
 
 }
