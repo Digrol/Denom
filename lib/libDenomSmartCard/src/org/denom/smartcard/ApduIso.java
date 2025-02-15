@@ -142,14 +142,14 @@ public class ApduIso
 	/**
 	 * Считать запись из файла записей.
 	 * @param record_number - Номер записи, от 1 до 255.
-	 * @param short_id - Короткий идентификатор файла, 0 = текущий файл.
+	 * @param sfi - Short File Id - Короткий идентификатор файла, 0 = текущий файл.
 	 */
-	public static CApdu ReadRecord( int short_id, int record_number )
+	public static CApdu ReadRecord( int sfi, int recordId )
 	{
-		MUST( (short_id >= 0) && (short_id < 31), "Wrong 'Short File ID'" );
-		MUST( (record_number > 0) && (record_number <= 255), "Wrong 'Record number'" );
+		MUST( (sfi >= 0) && (sfi < 31), "Wrong 'Short File Id'" );
+		MUST( (recordId > 0) && (recordId <= 255), "Wrong 'Record number'" );
 		
-		CApdu ap = new CApdu( 0x00, 0xB2, record_number, (short_id << 3) | 0x04, Bin(), CApdu.MAX_NE, "{ISO} READ RECORD" );
+		CApdu ap = new CApdu( 0x00, 0xB2, recordId, (sfi << 3) | 0x04, Bin(), CApdu.MAX_NE, "{ISO} READ RECORD" );
 		ap.isTlvData = true;
 		return ap;
 	}

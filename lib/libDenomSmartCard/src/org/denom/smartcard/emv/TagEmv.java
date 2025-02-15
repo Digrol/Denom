@@ -592,7 +592,7 @@ public class TagEmv
 	 * File Control Information (FCI) Issuer Discretionary Data.<br>
 	 * Issuer discretionary part of the FCI.
 	 */
-	public static final int FCI_IssuerDiscretionaryData
+	public static final int FCIIssuerDiscretionaryData
 	               = 0xBF0C; //  'A5'            |  <= 222    |  var.        |  ICC                   |
 
 	/**
@@ -607,7 +607,7 @@ public class TagEmv
 	 * Identifies the data object proprietary to this specification in the FCI template
 	 * according to ISO/IEC 7816-4.
 	 */
-	public static final int FCI_ProprietaryTemplate
+	public static final int FCIProprietaryTemplate
 	               = 0xA5  ; //  '6F'            |  var.      |  var.        |  ICC                   |
 
 	/**
@@ -733,7 +733,7 @@ public class TagEmv
 	 *       applications, it is strongly recommended that the IAD data element in an application
 	 *       that is not CCD-compliant should not use the coding for a CCD-compliant application.
 	 */
-	public static final int IssuerApplicationData
+	public static final int IAD
 	               = 0x9F10; //  '77', '80'      |  <= 32     |  b           |  ICC                   |
 
 	// ------------------------------------------------------------------------------------------------

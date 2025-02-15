@@ -1,13 +1,14 @@
 // Denom.org
 // Author:  Sergey Novochenko,  Digrol@gmail.com
 
-package org.denom.smartcard.emv.kernel8;
+package org.denom.smartcard.emv.kernel8.struct;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.denom.Binary;
+import org.denom.Int;
 import org.denom.format.BerTLV;
 import org.denom.format.BerTLVList;
 import org.denom.smartcard.emv.ITagDictionary;
@@ -15,6 +16,7 @@ import org.denom.smartcard.emv.TagInfo;
 
 import static org.denom.Binary.Bin;
 import static org.denom.Ex.MUST;
+import org.denom.smartcard.emv.TagInfo.Format;
 
 /**
  * Мап для накопления объектов данных (TLV-теги и их value) в Kernel-е во время проведения транзакции с картой.
@@ -52,7 +54,13 @@ public class TlvDatabase
 	public void store( int tag, Binary value )
 	{
 		MUST( value != null, "TlvDatabase.store: Value == null" );
-		db.put( tag, value );
+		db.put( tag, value.clone() );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public void store( BerTLV tlv )
+	{
+		db.put( tlv.tag, tlv.value.clone() );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -124,7 +132,6 @@ public class TlvDatabase
 	/**
 	 * Возвращает TLV в сериализованном виде.
 	 * Если запрашиваемого тега нет в БД, то пустой массив (не null).
-	 * @param tag
 	 * @return
 	 */
 	public Binary GetTLV( int tag )
@@ -132,7 +139,7 @@ public class TlvDatabase
 		Binary val = db.get( tag );
 		if( val == null )
 			return new Binary();
-		return BerTLV.Tlv( tag, val );
+		return BerTLV.Tlv( tag, val.clone() );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -157,7 +164,7 @@ public class TlvDatabase
 		Binary val = db.get( tag );
 		if( (val == null) || val.empty() )
 			return null;
-		return val;
+		return val.clone();
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -197,7 +204,7 @@ public class TlvDatabase
 		if( !tlvMain.isConstructed() )
 			return false;
 
-		ArrayList<BerTLV> recs = new BerTLVList( tlvsBin ).recs;
+		ArrayList<BerTLV> recs = new BerTLVList( tlvMain.value ).recs;
 
 		for( int i = 0; i < recs.size(); ++i )
 		{
@@ -237,4 +244,84 @@ public class TlvDatabase
 
 		return true;
 	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	private Binary calcDOLValue( int tag, int wantLen )
+	{
+		Binary myVal = GetValue( tag );
+
+		// 1) If the tag of any data object identified in the DOL is unknown or represents a 
+		// constructed data object, the Kernel concatenates a value of hexadecimal zeroes with 
+		// the length specified in the DOL entry.
+		if( (myVal == null) || BerTLV.isTagConstructed( tag ) )
+			return Bin( wantLen );
+
+		Format format = Format.B;
+		TagInfo tagInfo = dict.find( tag );
+		if( tagInfo != null )
+			format = tagInfo.format;
+
+		// 2) If the length specified in the DOL entry is less than the length of the data object, 
+		// the leftmost bytes of the value of the data object are truncated if the data object has 
+		// numeric (n) format, or the rightmost bytes for any other format.
+		if( wantLen < myVal.size() )
+		{
+			if( format == Format.N )
+				return myVal.last( wantLen );
+			else
+				return myVal.first( wantLen );
+		}
+		// 3) If the length specified in the DOL entry is greater than the length of the data object, 
+		// the following padding applies:
+		else if( wantLen > myVal.size() )
+		{
+			int padLen = wantLen - myVal.size();
+			if( format == Format.N )
+			{
+				// Leading hexadecimal zeroes if the data object has numeric format
+				return Bin( padLen ).add( myVal );
+			}
+			else if( format == Format.CN )
+			{
+				// Trailing hexadecimal 'FF's if the data object has compressed numeric format
+				return myVal.add( Bin( padLen, 0xFF ) );
+			}
+			else
+			{
+				// Trailing hexadecimal zeroes for any other format
+				return myVal.add( Bin( padLen ) );
+			}
+		}
+		else
+		{
+			return myVal;
+		}
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Create DOL Related Data.
+	 * EMV Сontactless Book C-8, Kernel 8 Specification v1.1,  4.1.4  DOL Handling.
+	 * @param dol - Data Object List - список TL (PDOL, CDOL1, CDOL2, DDOL, TDOL).
+	 * @return DOL values
+	 */
+	public Binary formDOLValues( final Binary dol )
+	{
+		Binary res = Bin().reserve( 200 );
+		Int offset = new Int( 0 );
+
+		while( offset.val < dol.size() )
+		{
+			Int Tag = new Int( 0 );
+			MUST( BerTLV.parseTag( dol, offset, Tag ), "Wrong Tag in DOL" );
+			Int Len = new Int( 0 );
+			MUST( BerTLV.parseLength( dol, offset, Len ), "Wrong Length in DOL" );
+
+			Binary val = calcDOLValue( Tag.val, Len.val );
+			res.add( val );
+		}
+
+		return res;
+	}
+	
 }

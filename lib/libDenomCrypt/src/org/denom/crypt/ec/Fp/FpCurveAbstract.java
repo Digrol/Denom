@@ -50,6 +50,10 @@ public abstract class FpCurveAbstract extends ECCurve
 		return fieldSize;
 	}
 
+	public final int getNField()
+	{
+		return (fieldSize + 7) >>> 3;
+	}
 
 	private ECElement[] getInitialZCoords()
 	{

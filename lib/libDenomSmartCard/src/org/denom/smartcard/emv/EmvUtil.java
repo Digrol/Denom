@@ -19,6 +19,53 @@ public final class EmvUtil
 {
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
+	 * Проверка формата (n 12) суммы или лимита.
+	 */
+	public static boolean IsAmountNumeric( final Binary amount )
+	{
+		return (amount.size() == 6) && amount.Hex().matches( "[0-9]+" );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Високосный год?
+	 */
+	public static boolean IsLeapYear( int year )
+	{
+		return ((year % 400) == 0) || (((year % 4) == 0) && ((year % 100) != 0));
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Проверка даты транзакции. Формат: YYMMDD.
+	 */
+	public static boolean IsYYMMDD( final Binary date )
+	{
+		String dateStr = date.Hex();
+		if( (dateStr.length() != 6) || !dateStr.matches( "[0-9]+" ) )
+		{
+			return false;
+		}
+
+		int year = Integer.parseInt( dateStr.substring( 0, 2 ) ) + 2000;
+		int month = Integer.parseInt( dateStr.substring( 2, 4 ) );
+		int day = Integer.parseInt( dateStr.substring( 4, 6 ) );
+
+		int maxDay = 31;
+		if( (month == 4) || (month == 6) || (month == 9) || (month == 11) )
+		{
+			maxDay = 30;
+		}
+		else if( month == 2 )
+		{
+			maxDay = IsLeapYear( year ) ? 29 : 28;
+		}
+
+		return (month > 0) && (month <= 12) && (day > 0) && (day <= maxDay);
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
 	 * EMV 4.3, Book 3, 6.5.12.
 	 * @param pin - PIN в открытом виде, строка длиной 4..12 символов. Каждый символ - цифра.
 	 * @param formatId - Формат 1 или 2 - первый нибл, идентификатор формата по ISO 9564-1 (default = 2).
@@ -36,34 +83,6 @@ public final class EmvUtil
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	/**
-	 * Считать с карты объекты данных из записей, указанных в AFL.<br>
-	 * Тег 70 отбрасывается, содержимое каждой записи парсится как список TLV и помещается в Map в виде [Tag - Value].
-	 * @param afl - поле Value тега TagEmv.AFL (берётся из ответа на команду GET PROCESSING OPTIONS)
-	 * @param data - сюда будут добавлены объекты данных
-	 * @param cmdRunner
-	 * @return Конкатенация записей, участвующих в SDA.
-	 */
-	public static Binary readAflDataObjects( final Binary afl, Map<Integer, Binary> data, CardReader cr )
-	{
-		Arr<Binary> sdaRecIds = new Arr<Binary>();
-		Map<Binary, Binary> records = readAflRecords( cr, parseAFL( afl, sdaRecIds ) );
-		Binary sdaRecords = getSdaRecords( records, sdaRecIds );
-
-		for( Binary value : records.values() )
-		{
-			BerTLV tlv = new BerTLV( value );
-			BerTLVList tlvs = new BerTLVList( tlv.value );
-			for( BerTLV rec : tlvs.recs )
-			{
-				data.put( rec.tag, rec.value );
-			}
-		}
-
-		return sdaRecords;
-	}
-
-	// -----------------------------------------------------------------------------------------------------------------
 	 /**
 	  * Распарсить AFL.
 	  * Элементы возвращаемых списков - 2 байта, идентифицирующие одну запись:
@@ -77,9 +96,7 @@ public final class EmvUtil
 		final String ERR_MESSAGE = "Wrong AFL format";
 
 		if( sdaRecords != null )
-		{
 			sdaRecords.clear();
-		}
 
 		MUST( (afl.size() & 0x03) == 0, ERR_MESSAGE ); // Размер кратен 4
 		Arr<Binary> recIds = new Arr<>();
@@ -164,89 +181,6 @@ public final class EmvUtil
 			}
 		}
 		return sdaRecords;
-	}
-
-
-// 	-----------------------------------------------------------------------------------------------------------------
-	/**
-	 * Получить бинарную строку - конкатенацию значений для указанных тегов.<br>
-	 * Данные ищутся в data. Если данные для тега не найдены, то они будут заданы нулями.
-	 * @param dol - Data Object List = список TL (PDOL, CDOL1, CDOL2, DDOL, TDOL),
-	 * поле Value для соответствующих тегов.
-	 * @param data - Пары Tag - Value
-	 * @return Конкатенация запрошенных значений
-	 */
-	public static Binary FormDOLRelatedData( final Binary dol, final Map<Integer, Binary> data )
-	{
-		Binary res = Bin();
-		Int offset = new Int( 0 );
-
-		while( offset.val < dol.size() )
-		{
-			Int Tag = new Int( 0 );
-			MUST( BerTLV.parseTag( dol, offset, Tag ), "Wrong Tag in DOL" );
-			Int Len = new Int( 0 );
-			MUST( BerTLV.parseLength( dol, offset, Len ), "Wrong Length in DOL" );
-
-			Binary val = getBinSafe( Tag.val, data );
-			if( val.empty() )
-			{	// Нет в списке, создаём нулевое значение.
-				res.add( Bin( Len.val ) );
-				continue;
-			}
-
-			MUST( val.size() == Len.val, "Incorrect data len for DOL request" );
-			res.add( val );
-		}
-
-		return res;
-	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	/**
-	 * Проверка формата (n 12) суммы или лимита.
-	 */
-	public static boolean IsAmountNumeric( final Binary amount )
-	{
-		return (amount.size() == 6) && amount.Hex().matches( "[0-9]+" );
-	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	/**
-	 * Високосный год?
-	 */
-	public static boolean IsLeapYear( int year )
-	{
-		return ((year % 400) == 0) || (((year % 4) == 0) && ((year % 100) != 0));
-	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	/**
-	 * Проверка даты транзакции. Формат: YYMMDD.
-	 */
-	public static boolean IsYYMMDD( final Binary date )
-	{
-		String dateStr = date.Hex();
-		if( (dateStr.length() != 6) || !dateStr.matches( "[0-9]+" ) )
-		{
-			return false;
-		}
-
-		int year = Integer.parseInt( dateStr.substring( 0, 2 ) ) + 2000;
-		int month = Integer.parseInt( dateStr.substring( 2, 4 ) );
-		int day = Integer.parseInt( dateStr.substring( 4, 6 ) );
-
-		int maxDay = 31;
-		if( (month == 4) || (month == 6) || (month == 9) || (month == 11) )
-		{
-			maxDay = 30;
-		}
-		else if( month == 2 )
-		{
-			maxDay = IsLeapYear( year ) ? 29 : 28;
-		}
-
-		return (month > 0) && (month <= 12) && (day > 0) && (day <= maxDay);
 	}
 
 }

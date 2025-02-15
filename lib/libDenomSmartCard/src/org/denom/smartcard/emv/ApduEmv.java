@@ -10,6 +10,7 @@ import org.denom.smartcard.CApdu;
 import org.denom.smartcard.CpsDataGroup;
 
 import static org.denom.Ex.MUST;
+import static org.denom.Binary.Bin;
 
 /**
  * Формирование CApdu для команд по спецификациям EMVCo.
@@ -68,13 +69,48 @@ public class ApduEmv
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * Команда GET PROCESSING OPTIONS -- EMV 4.4, Book 3, 6.5.8.<br>
-	 * Карта возвращает AIP и AFL, а также другие данные (если ответ в format 2).
+	 * Команда GET PROCESSING OPTIONS -- EMV 4.4, Book 3, 6.5.8.
+	 * Карта возвращает AIP и AFL, а также другие TLV объекты (если ответ в format 2).
 	 */
 	public static CApdu GetProcessingOptions( final Binary pdolValues )
 	{
 		return new CApdu( 0x80, 0xA8, 0x00, 0x00, BerTLV.Tlv( TagEmv.CommandTemplate, pdolValues ), CApdu.MAX_NE,
 			"{EMV} GET PROCESSING OPTIONS" );
+	}
+	
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Команда GENERATE APPLICATION CRYPTOGRAM -- EMV 4.3, Book 3, 6.5.5.
+	 */
+	public static CApdu GenerateAC( int cryptogramType, final Binary cdolRelData, boolean moreCommands )
+	{
+		int p2 = moreCommands ? 0x80 : 0x00;
+		CApdu ap = new CApdu( 0x80, 0xAE, cryptogramType, p2, cdolRelData, CApdu.MAX_NE, "{EMV} GENERATE AC" );
+		ap.isTlvData = true;
+		return ap;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Команда READ DATA.  Kernel C-8, 5.5.
+	 * Карта вернёт зашифрованные на сессионном ключе данные + MAC.
+	 * @param tag - 0x9F8111 – 0x9F811A.
+	 */
+	public static CApdu ReadData( int tag )
+	{
+		return new CApdu( 0x84, 0x32, 0x00, 0x00, Bin().addU24( tag ), CApdu.MAX_NE, "{EMV} READ DATA" );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Команда WRITE DATA.  Kernel C-8, 5.7.
+	 * Карта вернёт MAC от Plain TLV.
+	 * @param moreCommands - будут ли ещё команды в этой сессии.
+	 */
+	public static CApdu WriteData( Binary encryptedTLV, boolean moreCommands )
+	{
+		int p2 = moreCommands ? 0x80 : 0x00;
+		return new CApdu( 0x84, 0x34, 0x00, p2, encryptedTLV, CApdu.MAX_NE, "{EMV} WRITE DATA" );
 	}
 
 }

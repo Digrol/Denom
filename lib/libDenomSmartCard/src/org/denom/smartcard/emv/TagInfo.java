@@ -37,6 +37,11 @@ public class TagInfo
 	public int maxLen;
 
 	/**
+	 * see TagInfo.Format
+	 */
+	public Format format;
+
+	/**
 	 * Some textual description of data object.
 	 */
 	public String description;
@@ -46,21 +51,32 @@ public class TagInfo
 	 */
 	public int template;
 
-
 	// -----------------------------------------------------------------------------------------------------------------
-	public TagInfo( int tag, String name, int minLen, int maxLen, boolean fromCard )
+	/**
+	 * Identification of Value format
+	 */
+	public static enum Format
 	{
-		this.tag = tag;
-		this.name = name;
-		this.minLen = minLen;
-		this.maxLen = maxLen;
-		this.fromCard = fromCard;
+		B,
+		// BCD encoded, right justified with leading 0x00
+		N,
+		// BCD encoded, left justified, and padded with trailing 'F's
+		CN,
+		// ASCII encoded, left justified, and padded with trailing 0x00
+		AN,
+		// ASCII encoded, left justified, and padded with trailing 0x00
+		ANS
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	public TagInfo( int tag, String name, int minLen, int maxLen, boolean fromCard, int template, String description )
+	public TagInfo( int tag, String name, Format format, int minLen, int maxLen, boolean fromCard, int template, String description )
 	{
-		this( tag, name, minLen, maxLen, fromCard );
+		this.tag = tag;
+		this.name = name;
+		this.format = format;
+		this.minLen = minLen;
+		this.maxLen = maxLen;
+		this.fromCard = fromCard;
 		this.template = template;
 		this.description = description;
 	}

@@ -3,9 +3,12 @@
 
 package org.denom.smartcard.emv;
 
+import java.math.BigInteger;
+
 import org.denom.*;
 import org.denom.crypt.*;
 import org.denom.crypt.ec.ECAlg;
+import org.denom.crypt.ec.Fp.FpCurveAbstract;
 
 import static org.denom.Binary.Bin;
 import static org.denom.Ex.MUST;
@@ -16,6 +19,105 @@ import static org.denom.Ex.MUST;
  */
 public class EmvCrypt
 {
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Генерация DES3 ключа карты (MK) из мастер-ключа эмитента (IMK).
+	 * @param issuerKey - IMK - 3DES-ключ эмитента.
+	 * @param Y - [8 байт], данные для получения производного ключа: 7 последних байт PAN + PAN SN.
+	 * @return Производный ключ.
+	 */
+	public static Binary generateIcc3DesMK( final Binary issuerKey, final Binary Y )
+	{
+		MUST( issuerKey.size() == DES2_EDE.KEY_SIZE, "Некорректный размер ключа" );
+		MUST( Y.size() == 8, "Некорректный размер derivation data" );
+
+		Binary Y2 = Binary.xor( Y, Bin( 8, 0xFF ) );
+		Binary Z = Bin( Y, Y2 );
+		DES2_EDE alg = new DES2_EDE( issuerKey );
+		Z = alg.encrypt( Z, CryptoMode.ECB, AlignMode.NONE );
+		DES.setOddParityBits( Z );
+		return Z;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Генерация DES3 ключа карты (MK) из мастер-ключа эмитента (IMK).
+	 * Book E, 4.1.A
+	 */
+	public static Binary generateIcc3DesMK( final Binary issuerKey, final Binary PAN, final Binary PAN_SN )
+	{
+		// PAN || PSN
+		Binary X = Bin( PAN, PAN_SN );
+		// Rightmost 16 digits of X
+		Binary Y = X.last( 8 );
+		return generateIcc3DesMK( issuerKey, Y );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Генерация AES ключа карты (MK) из мастер-ключа эмитента (IMK).
+	 * Book E, 4.1.C
+	 */
+	public static Binary generateIccAesMK( final Binary IMK, final Binary PAN, final Binary PAN_SN )
+	{
+		// X = PAN || PSN
+		// Pad X to the left with zero-digits to form a 16-byte number Y
+		Binary Y = Bin( Bin( 16 - PAN.size() - PAN_SN.size() ), PAN, PAN_SN );
+		new AES( IMK ).encryptBlock( Y );
+		return Y;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Сгенерировать EC ключ для карты или эмитента.
+	 * Book E, 8.8.5
+	 * @param ecAlg с кривой FP
+	 * @return Только X-координата публичного ключа.
+	 */
+	public static Binary generateEccKey( ECAlg ecAlg )
+	{
+		FpCurveAbstract curve = (FpCurveAbstract)ecAlg.getCurve();
+		int nSize = curve.getNField();
+
+		BigInteger p = curve.getP();
+		BigInteger p2 = p.add( BigInteger.ONE ).divide( BigInteger.valueOf( 2 ) );
+
+		// Repeatedly generate until the y-coordinate of d*G is less than (p+1)/2
+		BigInteger y = null;
+		Binary pub;
+		do
+		{
+			ecAlg.generateKeyPair();
+			pub = ecAlg.getPublic( false );
+			y = new BigInteger( Bin( Bin( 1 ), pub.last( nSize ) ).getBytes() );
+		}
+		while( y.compareTo( p2 ) != -1 );
+
+		return pub.slice( 1, nSize );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Book E, 8.8.4 Point Finding.
+	 * @param publicKeyX - Координата X.
+	 */
+	public static void restorePublicKey( ECAlg ecAlg, final Binary publicKeyX )
+	{
+		int NField = ((FpCurveAbstract)ecAlg.getCurve()).getNField();
+
+		ecAlg.setPublic( Bin(1, 0x02).add( publicKeyX ) );
+		Binary key02 = ecAlg.getPublic( false );
+		key02 = key02.last( NField );
+
+		ecAlg.setPublic( Bin(1, 0x03).add( publicKeyX ) );
+		Binary key03 = ecAlg.getPublic( false );
+		key03 = key03.last( NField );
+
+		// из двух точек берем ту, у которой Y меньше.
+		if( key02.compareTo( key03 ) == -1 )
+			ecAlg.setPublic( Bin(1, 0x02).add( publicKeyX ) );
+	}
+
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Вычислить Card blinded public key - Pc.
@@ -124,18 +226,69 @@ public class EmvCrypt
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
+	 * Вычислить сессионные ключи BDH.
+	 * @param Dk - Секретный ключ терминала.
+	 * @param Pc - Card blinded public key, длина = размеру параметров кривой. То, что карта возвращает в GPO.
+	 * @return Конкатенация SKc || SKi
+	 */
+	public static Binary BDHCalcSessionKeys( final ECAlg Dk, final Binary Pc )
+	{
+		Binary z = BDHCalcZ( Dk, Pc );
+		Binary Kd = BDHCalcKd( z );
+		Binary SKc = BDHCalcSessionKey( Kd, 0x01 );
+		Binary SKi = BDHCalcSessionKey( Kd, 0x02 );
+		return Bin( SKc, SKi );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
 	 * Book E,  8.6.2  AES-CTR.
-	 * @param messageCounter (U16)
+	 * @param messageCounter (U16). Incremented after operation.
 	 * @param data input message (plain or crypt).
 	 * @return output message C (crypt or plain).
 	 */
-	public static Binary cryptAesCTR( AES aes, int messageCounter, final Binary data )
+	public static Binary cryptAesCTR( AES aes, Int messageCounter, final Binary data )
 	{
-		MUST( Int.isU16( messageCounter ), "Wrong messageCounter for AES-CTR" );
+		MUST( Int.isU16( messageCounter.val ), "Wrong messageCounter for AES-CTR" );
 		Binary SV = Bin( aes.getBlockSize() );
-		SV.setU16( 0, messageCounter );
+		SV.setU16( 0, messageCounter.val );
 		Binary C = aes.cryptCTR( data, SV );
+		messageCounter.val++;
 		return C;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public static Binary calcAesMac( AES aes, Int messageCounter, final Binary data )
+	{
+		Binary b = Bin().addU16( messageCounter.val ).add( data );
+		Binary mac = aes.calcCMAC( b, null ).first( 8 );
+		messageCounter.val++;
+		return mac;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * @param Er - encrypted blinding factor.
+	 * @param CMC - Card Message Counter, incremented after operation.
+	 * Recover 'r' from 'Encrypted r'
+	 */
+	public static Binary BDHRecoverR( AES SKc, final Binary Er, Int CMC )
+	{
+		return cryptAesCTR( SKc, CMC, Er );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * 7.3  BDH Blinding Factor Validation.
+	 * @param Pc - blinded card public key.
+	 */
+	public static boolean BDHValidate( ECAlg Qc, final Binary r, final Binary Pc )
+	{
+		ECAlg ec = Qc.clone();
+		ec.setPrivate( r );
+		Binary QcPoint = Qc.getPublic( false );
+		Binary myPc = ec.calcDH( QcPoint );
+		return Pc.equals( myPc );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -311,5 +464,54 @@ public class EmvCrypt
 	{
 		Binary ac = SKac.calcCMAC( inputData, null ).first( 8 );
 		return ac;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Зашифровать Data Envelope + MAC.
+	 * Формирование ответа карты на READ DATA.
+	 */
+	public static Binary encryptReadData( AES aesSKc, AES aesSKi, Int CMC, final Binary plainTlv )
+	{
+		Binary encryptedTLV = cryptAesCTR( aesSKc, new Int( CMC.val ), plainTlv );
+		Binary mac = calcAesMac( aesSKi, CMC, encryptedTLV );
+		return encryptedTLV.add( mac );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Расшифровать ответ карты на READ DATA.
+	 * @return Plain TLV или null, если MAC не совпал.
+	 */
+	public static Binary decryptReadData( AES aesSKc, AES aesSKi, Int CMC, final Binary crypt )
+	{
+		Binary cardMac = crypt.last( 8 );
+		Binary encryptedTLV = crypt.first( crypt.size() - 8 );
+
+		// CMC для MAC и Decrypt один и тот же
+		Binary myMac = calcAesMac( aesSKi, new Int( CMC.val ), encryptedTLV );
+		if( !myMac.equals( cardMac ) )
+			return null;
+
+		Binary plainTLV = cryptAesCTR( aesSKc, CMC, encryptedTLV );
+		return plainTLV;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Зашифровать/Расшифровать Data Envelope для отправки в карту в команде WRITE DATA.
+	 */
+	public static Binary cryptWriteData( AES aesSKc, Int KMC, final Binary plainTlv )
+	{
+		return cryptAesCTR( aesSKc, KMC, plainTlv );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Вычислить MAC от Plaint TLV  Data Envelope для ответа карты на WRITE DATA
+	 */
+	public static Binary calcDataEnvelopeMac( AES aesSKi, Int CMC, final Binary plainTlv )
+	{
+		return calcAesMac( aesSKi, CMC, plainTlv );
 	}
 }

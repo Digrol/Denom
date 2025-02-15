@@ -895,17 +895,15 @@ public final class Binary implements Comparable<Binary>
 	 * @param right - Массив, с которым выполнится XOR
 	 * @return Ссылка на себя
 	 */
-	public Binary xor( Binary right )
+	public Binary xor( Binary other )
 	{
 		int sz = size();
-		MUST( sz == right.size(), "Длины массивов в операторе 'xor' должны быть равны" );
+		MUST( sz == other.size(), "Длины массивов в операторе 'xor' должны быть равны" );
 
-		byte[] this_data = mData;
-		byte[] right_data = right.mData;
+		byte[] otherData = other.mData;
 		for( int i = 0; i < sz; ++i )
-		{
-			this_data[ i ] ^= right_data[ i ];
-		}
+			mData[ i ] ^= otherData[ i ];
+
 		return this;
 	}
 
@@ -915,17 +913,15 @@ public final class Binary implements Comparable<Binary>
 	 * @param right - Массив, с которым выполнится OR
 	 * @return Ссылка на себя
 	 */
-	public Binary or( Binary right )
+	public Binary or( Binary other )
 	{
 		int size = size();
-		MUST( size == right.size(), "Длины массивов в операторе 'or' должны быть равны" );
+		MUST( size == other.size(), "Длины массивов в операторе 'or' должны быть равны" );
 
-		byte[] this_data = mData;
-		byte[] right_data = right.mData;
+		byte[] otherData = other.mData;
 		for( int i = 0; i < size; ++i )
-		{
-			this_data[ i ] |= right_data[ i ];
-		}
+			mData[ i ] |= otherData[ i ];
+
 		return this;
 	}
 
@@ -935,17 +931,15 @@ public final class Binary implements Comparable<Binary>
 	 * @param right - Массив, с которым выполнится AND
 	 * @return Ссылка на себя
 	 */
-	public Binary and( Binary right )
+	public Binary and( Binary other )
 	{
 		int size = size();
-		MUST( size == right.size(), "Длины массивов в операторе 'and' должны быть равны" );
+		MUST( size == other.size(), "Длины массивов в операторе 'and' должны быть равны" );
 
-		byte[] this_data = mData;
-		byte[] right_data = right.mData;
+		byte[] otherData = other.mData;
 		for( int i = 0; i < size; ++i )
-		{
-			this_data[ i ] &= right_data[ i ];
-		}
+			mData[ i ] &= otherData[ i ];
+
 		return this;
 	}
 

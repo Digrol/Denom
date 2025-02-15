@@ -15,7 +15,7 @@ import static org.denom.Ex.MUST;
 /**
  * Статические методы для формирования Data Groups (DG) для персонализации EMV-приложений.
  */
-public final class PersoDataGroups
+public final class EmvDataGroups
 {
 	/**
 	 * Группа данных: Одна запись (record) для RF-файла.

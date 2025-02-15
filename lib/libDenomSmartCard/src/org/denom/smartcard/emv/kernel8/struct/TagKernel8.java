@@ -1,7 +1,7 @@
 // Denom.org
 // Author:  Sergey Novochenko,  Digrol@gmail.com
 
-package org.denom.smartcard.emv.kernel8;
+package org.denom.smartcard.emv.kernel8.struct;
 
 /**
  * BerTLV Tags for data elements, defined in EMV Сontactless Book C-8, Kernel 8 Specification v1.1, Annex A. Data Dictionary
@@ -282,7 +282,7 @@ public class TagKernel8
 	 * and yet still be considered acceptable. The Maximum Relay Resistance Grace Period
 	 * is expressed in units of hundreds of microseconds.
 	 */
-	public static final int MaximumRelayResistanceGracePeriod
+	public static final int MaximumRRGracePeriod
 	               = 0x9F8214; //  2             |  b               |  K                      |
 
 	/**
@@ -372,7 +372,7 @@ public class TagKernel8
 	 * no longer acceptable. The Relay Resistance Accuracy Threshold is expressed 
 	 * in units of hundreds of microseconds.
 	 */
-	public static final int RelayResistanceAccuracyThreshold
+	public static final int RR_AccuracyThreshold
 	               = 0x9F8217; //  2             |  b               |  K                      |
 
 	/**
@@ -381,7 +381,7 @@ public class TagKernel8
 	 * used by the card to process the EXCHANGE RELAY RESISTANCE DATA command.
 	 * The Relay Resistance Time Excess is expressed in units of hundreds of microseconds.
 	 */
-	public static final int RelayResistanceTimeExcess
+	public static final int RR_TimeExcess
 	               = 0x9F810C; //  2             |  b               |  K                      |
 
 	/**
@@ -392,7 +392,7 @@ public class TagKernel8
 	 * The Relay Resistance Transmission Time Mismatch Threshold is a percentage 
 	 * and expressed as an integer.
 	 */
-	public static final int RelayResistanceTransmissionTimeMismatchThreshold
+	public static final int RR_TransmissionTimeMismatchThreshold
 	               = 0x9F8218; //  2             |  b               |  K                      |
 
 	/**
@@ -468,7 +468,7 @@ public class TagKernel8
 	 * The Terminal Expected Transmission Time For Relay Resistance 
 	 * C-APDU is expressed in units of hundreds of microseconds.
 	 */
-	public static final int TerminalExpectedTransmissionTimeForRelayResistanceCAPDU
+	public static final int TerminalExpectedTimeForRRCAPDU
 	               = 0x9F8215; //  2             |  b               |  K                      |
 
 	/**
@@ -478,7 +478,7 @@ public class TagKernel8
 	 * The Terminal Expected Transmission Time For Relay Resistance 
 	 * R-APDU is expressed in units of hundreds of microseconds.
 	 */
-	public static final int TerminalExpectedTransmissionTimeForRelayResistanceRAPDU
+	public static final int TerminalExpectedTimeForRRRAPDU
 	               = 0x9F8216; //  2             |  b               |  K                      |
 
 	/**
