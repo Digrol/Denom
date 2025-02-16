@@ -9,12 +9,14 @@ import java.util.Map;
 import org.denom.*;
 import org.denom.crypt.AES;
 import org.denom.crypt.ec.ECAlg;
+import org.denom.crypt.hash.SHA256;
 import org.denom.format.*;
 import org.denom.smartcard.emv.*;
 import org.denom.smartcard.emv.certificate.*;
 import org.denom.smartcard.emv.kernel8.struct.*;
 
 import static org.denom.Binary.*;
+import static org.denom.format.BerTLV.Tlv;
 import static org.denom.Ex.MUST;
 import static org.denom.smartcard.emv.EmvCrypt.*;
 
@@ -59,7 +61,7 @@ public class K8Session
 
 	public Binary rRecovered;
 
-	Binary sdaRecords = Bin();
+	public Binary sdaRecords = Bin();
 
 	// -----------------------------------------------------------------------------------------------------------------
 	public K8Session( ECAlg ecAlg )
@@ -198,9 +200,31 @@ public class K8Session
 			tlvDB.ParseAndStoreCardResponse( rec );
 		}
 
-		sdaRecords = EmvUtil.getSdaRecords( records, sdaRecIds );
+		sdaRecords = EmvUtil.getSdaRecordsKernel8( records, sdaRecIds );
 	}
 
+	// -----------------------------------------------------------------------------------------------------------------
+	private Binary createExtSDARelData()
+	{
+		Binary res = Bin();
+
+		if( tlvDB.IsEmpty( TagKernel8.ExtendedSDATagList ) )
+			return res;
+		
+		Binary extTagList = tlvDB.GetValue( TagKernel8.ExtendedSDATagList );
+		Arr<Integer> tags = BerTLV.parseTagList( extTagList );
+		for( int tag : tags )
+		{
+			Binary val = tlvDB.GetValue( tag );
+			if( val != null )
+				res.add( Tlv( tag, val ) );
+			else
+				res.add( Tlv( tag, Bin() ) );
+		}
+
+		return res;
+	}
+	
 	// -----------------------------------------------------------------------------------------------------------------
 	public void processCertificates( Map<Integer, Binary> caPublicKeys )
 	{
@@ -223,6 +247,14 @@ public class K8Session
 		MUST( cert != null, "ICC Public Key Cert absent on card" );
 		IccEccCertificate iccCert = new IccEccCertificate().fromBin( cert );
 		MUST( iccCert.verifySignature( ecAlg ), "Wrong signature in ICC ECC Certificate" );
+
+		Binary extendedSDARelData = createExtSDARelData();
+
+		Binary aip = tlvDB.GetValue( TagEmv.AIP );
+		Binary myHash = calcSDAHash( new SHA256(), sdaRecords, extendedSDARelData, aip );
+
+		MUST(iccCert.iccdHash.equals( myHash ), "Wrong ICCD Hash" );
+
 		validateR( iccCert.iccPublicKeyX );
 	}
 
@@ -278,7 +310,7 @@ public class K8Session
 
 		inputForAC.add( aip );
 		inputForAC.add( atc );
-		inputForAC.add( iad.slice( 2, 6 ) );
+		inputForAC.add( iad.slice( 2, 6 ) ); // CVR
 		if( includeIADMAC )
 			inputForAC.add( IadMac );
 

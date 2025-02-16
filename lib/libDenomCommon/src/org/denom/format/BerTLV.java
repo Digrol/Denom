@@ -4,6 +4,7 @@
 
 package org.denom.format;
 
+import org.denom.Arr;
 import org.denom.Binary;
 import org.denom.Int;
 
@@ -333,6 +334,24 @@ public class BerTLV
 			--l;
 		}
 		return len_parsed.val >= 0;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Распарсить список Тегов.
+	 */
+	public static Arr<Integer> parseTagList( final Binary tags )
+	{
+		Arr<Integer> arr = new Arr<>();
+		Int offset = new Int( 0 );
+		while( offset.val < tags.size() )
+		{
+			Int Tag = new Int( 0 );
+			MUST( BerTLV.parseTag( tags, offset, Tag ), "Wrong Tag in Tag List" );
+			arr.add( Tag.val );
+		}
+		MUST( offset.val == tags.size(), "Wrong Tag List" );
+		return arr;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------

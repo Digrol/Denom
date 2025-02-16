@@ -155,7 +155,9 @@ public final class EmvUtil
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
-	 * Сконкатенировать записи, участвующие в SDA.
+	 * Сконкатенировать записи, участвующие в SDA (по EMV 4.4).
+	 * EMV 4.4, Book 3, 10.3 - Offline Data Authentication.
+	 * По-разному обрабатываются записи в SFI 1-10 и более.
 	 */
 	public static Binary getSdaRecords( Map<Binary, Binary> records, Arr<Binary> sdaRecIds )
 	{
@@ -164,7 +166,6 @@ public final class EmvUtil
 		{
 			Binary record = records.get( sdaRecId );
 
-			// EMV 4.3, Book 3, 10.3 - Offline Data Authentication.
 			// Все записи, участвующие в SDA, должны быть в теге 0x70.
 			BerTLV rec = new BerTLV( record );
 			MUST( rec.tag == TagEmv.ReadRecordResponseMessageTemplate, "Record body for SDA must be in tag 0x70" );
@@ -183,4 +184,26 @@ public final class EmvUtil
 		return sdaRecords;
 	}
 
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Сконкатенировать записи, участвующие в SDA по Kernel 8.
+	 * Отбрасывается тег 70 для всех записей.
+	 */
+	public static Binary getSdaRecordsKernel8( Map<Binary, Binary> records, Arr<Binary> sdaRecIds )
+	{
+		Binary sdaRecords = Bin();
+		for( Binary sdaRecId : sdaRecIds )
+		{
+			Binary record = records.get( sdaRecId );
+
+			// EMV 4.3, Book 3, 10.3 - Offline Data Authentication.
+			// Все записи, участвующие в SDA, должны быть в теге 0x70.
+			BerTLV rec = new BerTLV( record );
+			MUST( rec.tag == TagEmv.ReadRecordResponseMessageTemplate, "Record body for SDA must be in tag 0x70" );
+
+			// тег 0x70 отбрасывается, берётся только Value.
+			sdaRecords.add( rec.value );
+		}
+		return sdaRecords;
+	}
 }

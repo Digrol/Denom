@@ -5,10 +5,12 @@ package org.denom.smartcard.emv;
 
 import java.math.BigInteger;
 
-import org.denom.*;
+import org.denom.Binary;
+import org.denom.Int;
 import org.denom.crypt.*;
 import org.denom.crypt.ec.ECAlg;
 import org.denom.crypt.ec.Fp.FpCurveAbstract;
+import org.denom.crypt.hash.IHash;
 
 import static org.denom.Binary.Bin;
 import static org.denom.Ex.MUST;
@@ -454,7 +456,7 @@ public class EmvCrypt
 		Binary ac = SKac.calcCCS( inputData, AlignMode.BLOCK, CCSMode.FAST );
 		return ac;
 	}
-	
+
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Calc card AC for AES
@@ -465,6 +467,10 @@ public class EmvCrypt
 		Binary ac = SKac.calcCMAC( inputData, null ).first( 8 );
 		return ac;
 	}
+
+	// =================================================================================================================
+	// Data Storage
+	// =================================================================================================================
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
@@ -514,4 +520,19 @@ public class EmvCrypt
 	{
 		return calcAesMac( aesSKi, CMC, plainTlv );
 	}
+
+	// =================================================================================================================
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * @param sdaRecords Все записи, участвующие в SDA.
+	 * @param конкатенация всех TLV из списка 'Extended SDA Tag List'.
+	 * @param AIP [2 байта] без тега
+	 * @return
+	 */
+	public static Binary calcSDAHash( IHash hashAlg, final Binary sdaRecords, Binary extendedSDARelData, final Binary AIP )
+	{
+		return hashAlg.calc( Bin().add( sdaRecords ).add( extendedSDARelData ).add( AIP ) );
+	}
+
 }

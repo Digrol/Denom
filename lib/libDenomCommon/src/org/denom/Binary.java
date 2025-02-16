@@ -10,7 +10,8 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.Map;
 
-import static org.denom.Ex.*;
+import static org.denom.Ex.MUST;
+import static org.denom.Ex.THROW;
 
 /**
  * Байтовый массив переменного размера.<br>
