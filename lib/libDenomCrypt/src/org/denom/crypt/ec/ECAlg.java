@@ -5,6 +5,8 @@ package org.denom.crypt.ec;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.Random;
+
 import org.denom.Binary;
 import org.denom.format.*;
 import org.denom.crypt.ec.ECCurve.ECPoint;
@@ -28,7 +30,7 @@ public class ECAlg
 	private ECPoint Q = null; // Public Key
 	private BigInteger D = null; // Private Key
 
-	private final SecureRandom random = new SecureRandom();
+	private Random algRandom;
 	private BigInteger fixedK = null; // for test only
 
 	private static final Binary OID_EC_KEY = ASN1OID.toBin( "1.2.840.10045.2.1" );
@@ -37,12 +39,20 @@ public class ECAlg
 	// -----------------------------------------------------------------------------------------------------------------
 	public ECAlg( ECCurve curve )
 	{
+		this( curve, new SecureRandom() );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public ECAlg( ECCurve curve, Random algRandom )
+	{
 		this.curve = curve;
 		this.oidEcParams = !curve.getOid().isEmpty() ? ASN1OID.toBin( curve.getOid() ) : Bin();
 		this.N = curve.getOrder();
 		this.H = curve.getCofactor();
 		this.HInv = H.modInverse( N );
 		this.nSize = (curve.getFieldSize() + 7) / 8; // bytes
+
+		this.algRandom = algRandom;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -51,7 +61,7 @@ public class ECAlg
 	 */
 	public ECAlg clone()
 	{
-		return new ECAlg( this.curve );
+		return new ECAlg( this.curve, this.algRandom );
 	}
 	
 	// -----------------------------------------------------------------------------------------------------------------
@@ -174,7 +184,7 @@ public class ECAlg
 
 		for( ;; )
 		{
-			D = new BigInteger( nBitLength, random );
+			D = new BigInteger( nBitLength, algRandom );
 
 			if( (D.compareTo( BigInteger.valueOf( 2 ) ) > 0)
 				&& (D.compareTo( N ) < 0)
@@ -202,15 +212,13 @@ public class ECAlg
 	private BigInteger generateK()
 	{
 		if( fixedK != null )
-		{
 			return fixedK;
-		}
 
 		int nBitLen = N.bitLength();
 		BigInteger k;
 		do
 		{
-			k = new BigInteger( nBitLen, random );
+			k = new BigInteger( nBitLen, algRandom );
 		}
 		while( k.equals( BigInteger.ZERO ) || k.compareTo( N ) >= 0 );
 

@@ -315,7 +315,7 @@ public class TagKernel8
 	 * that the measured time may be and yet still be considered acceptable.
 	 * The Minimum Relay Resistance Grace Period is expressed in units of hundreds of microseconds.
 	 */
-	public static final int MinimumRelayResistanceGracePeriod
+	public static final int MinimumRRGracePeriod
 	               = 0x9F8213; //  2             |  b               |  K                      |
 
 	/**

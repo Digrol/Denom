@@ -113,4 +113,17 @@ public class ApduEmv
 		return new CApdu( 0x84, 0x34, 0x00, p2, encryptedTLV, CApdu.MAX_NE, "{EMV} WRITE DATA" );
 	}
 
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Команда EXCHANGE RELAY RESISTANCE DATA.  Kernel C-8, 5.2.
+	 * Карта в ответе возвращает TLV с тегом 0x80, в котором value 10 байт, конкатенация:
+	 *   Device Relay Resistance Entropy [4 байта]
+	 *     |  Min Time For Processing Relay Resistance APDU [2 байта]
+	 *     |  Max Time For Processing Relay Resistance APDU [2 байта]
+	 *     |  Device Estimated Transmission Time For Relay Resistance R-APDU [2 байта].
+	 */
+	public static CApdu ExchangeRelayResistanceData( final Binary terminalEntropy )
+	{
+		return new CApdu( 0x80, 0xEA, 0x00, 0x00, terminalEntropy, CApdu.MAX_NE, "{EMV} EXCHANGE RELAY RESISTANCE DATA" );
+	}
 }

@@ -3,20 +3,16 @@
 
 package org.denom.smartcard.emv.kernel8.struct;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-import org.denom.Binary;
-import org.denom.Int;
-import org.denom.format.BerTLV;
-import org.denom.format.BerTLVList;
-import org.denom.smartcard.emv.ITagDictionary;
-import org.denom.smartcard.emv.TagInfo;
+import org.denom.*;
+import org.denom.format.*;
+import org.denom.smartcard.emv.*;
+import org.denom.smartcard.emv.TagInfo.Format;
 
 import static org.denom.Binary.Bin;
-import static org.denom.Ex.MUST;
-import org.denom.smartcard.emv.TagInfo.Format;
+import static org.denom.Ex.*;
+import static org.denom.format.BerTLV.Tlv;
 
 /**
  * Мап для накопления объектов данных (TLV-теги и их value) в Kernel-е во время проведения транзакции с картой.
@@ -41,6 +37,21 @@ public class TlvDatabase
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
+	public TlvDatabase clone()
+	{
+		TlvDatabase newObj = new TlvDatabase( dict );
+		newObj.append( this );
+		return newObj;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public void append( TlvDatabase other )
+	{
+		for( Map.Entry<Integer, Binary> entry : other.db.entrySet() )
+			this.db.put( entry.getKey(), entry.getValue().clone() );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Очистить БД.
 	 * Удалить все хранимые объекты.
@@ -54,13 +65,19 @@ public class TlvDatabase
 	public void store( int tag, Binary value )
 	{
 		MUST( value != null, "TlvDatabase.store: Value == null" );
+		TagInfo info = dict.find( tag );
+		if( info == null )
+			THROW( "Unknown Tag " + Binary.Num_Bin( tag, 0 ).Hex() );
+		if( !info.isGoodLen( value ) )
+			THROW( "Tag " + Binary.Num_Bin( tag, 0 ).Hex() + " wrong value len" );
+
 		db.put( tag, value.clone() );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	public void store( BerTLV tlv )
 	{
-		db.put( tlv.tag, tlv.value.clone() );
+		store( tlv.tag, tlv.value );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -323,5 +340,111 @@ public class TlvDatabase
 
 		return res;
 	}
-	
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Для маппинга тегов, в DB может быть задан объект 'TagKernel8.TagMappingList'.
+	 * Book C-8, A.1.118
+	 * Построим по нему HashMap. Может быть пустой, если список TagMappingList не задан или пустой.
+	 */
+	public HashMap<Integer, Integer> createTagMapping()
+	{
+		HashMap<Integer, Integer> map = new HashMap<>();
+		
+		Binary tagMappingBin = GetValue( TagKernel8.TagMappingList );
+		if( (tagMappingBin == null) || tagMappingBin.empty() )
+			return map;
+
+		Arr<Integer> arr = BerTLV.parseTagList( tagMappingBin );
+		MUST( (arr.size() & 0x01) == 0, "Wrong Tag Mapping List" );
+
+		for( int i = 0; i < arr.size(); i += 2 )
+			map.put( arr.get( i ), arr.get( i + 1 ) );
+
+		return map;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	public Binary getMappedTlv( HashMap<Integer, Integer> map, int tag )
+	{
+		if( IsNotPresent( tag ) )
+			return Bin();
+
+		Binary val = GetValue( tag );
+		
+		Integer mapToTag = map.get( tag );
+		if( mapToTag != null )
+			return Tlv( mapToTag, val );
+		else
+			return Tlv( tag, val );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Book C-8, 4.3.
+	 * @return TLV BF8103 со всеми TLV-объектами, имеющимися в DB из списка 'TagKernel8.DiscretionaryDataTagList'
+	 */
+	public Binary createDiscretionaryData()
+	{
+		HashMap<Integer, Integer> map = createTagMapping();
+
+		Binary val = Bin();
+		Binary tagList = GetValue( TagKernel8.DiscretionaryDataTagList );
+		if( (tagList != null) && !tagList.empty() )
+		{
+			Arr<Integer> tags = BerTLV.parseTagList( tagList );
+			for( int tag : tags )
+				val.add( getMappedTlv( map, tag ) );
+		}
+
+		return BerTLV.Tlv( TagKernel8.DiscretionaryData, val );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
+	 * Book C-8, 4.3.
+	 * @return TLV BF8102 со всеми TLV-объектами, имеющимися в DB из списка Book C-8, Table A.11.
+	 */
+	public Binary createDataRecord()
+	{
+		HashMap<Integer, Integer> map = createTagMapping();
+		Binary val = Bin().reserve( 1000 );
+
+		val.add( getMappedTlv( map,     TagEmv.AmountAuthorisedNumeric ) );
+		val.add( getMappedTlv( map,     TagEmv.AmountOtherNumeric ) );
+		val.add( getMappedTlv( map,     TagEmv.ApplicationCryptogram ) );
+		val.add( getMappedTlv( map,     TagEmv.ApplicationExpirationDate ) );
+		val.add( getMappedTlv( map,     TagEmv.AIP ) );
+		val.add( getMappedTlv( map,     TagEmv.ApplicationLabel ) );
+		val.add( getMappedTlv( map,     TagEmv.PAN ) );
+		val.add( getMappedTlv( map,     TagEmv.PAN_SN ) );
+		val.add( getMappedTlv( map,     TagEmv.ApplicationPreferredName ) );
+		val.add( getMappedTlv( map,     TagEmv.ATC ) );
+		val.add( getMappedTlv( map,     TagEmv.ApplicationUsageControl ) );
+		val.add( getMappedTlv( map,     TagEmv.ApplicationVersionNumberTerminal ) );
+		val.add( getMappedTlv( map, TagKernel8.AuthenticatedApplicationData ) );
+		val.add( getMappedTlv( map, TagKernel8.CardCapabilitiesInformation ) );
+		val.add( getMappedTlv( map,     TagEmv.CryptogramInformationData ) );
+		val.add( getMappedTlv( map,     TagEmv.CVMResults ) );
+		val.add( getMappedTlv( map,     TagEmv.DFName ) );
+		val.add( getMappedTlv( map,     TagEmv.InterfaceDeviceSerialNumber ) );
+		val.add( getMappedTlv( map,     TagEmv.IAD ) );
+		val.add( getMappedTlv( map, TagKernel8.IAD_MAC ) );
+		val.add( getMappedTlv( map,     TagEmv.IssuerCodeTableIndex ) );
+		val.add( getMappedTlv( map,     TagEmv.PAR ) );
+		val.add( getMappedTlv( map,     TagEmv.TerminalCapabilities ) );
+		val.add( getMappedTlv( map,     TagEmv.TerminalCountryCode ) );
+		val.add( getMappedTlv( map,     TagEmv.TerminalType ) );
+		val.add( getMappedTlv( map,     TagEmv.TerminalVerificationResults ) );
+		val.add( getMappedTlv( map,     TagEmv.TokenRequestorId ) );
+		val.add( getMappedTlv( map,     TagEmv.Track2EquivalentData ) );
+		val.add( getMappedTlv( map,     TagEmv.TransactionCurrencyCode ) );
+		val.add( getMappedTlv( map,     TagEmv.TransactionDate ) );
+		val.add( getMappedTlv( map,     TagEmv.TransactionType ) );
+		val.add( getMappedTlv( map,     TagEmv.UnpredictableNumber ) );
+
+		return BerTLV.Tlv( TagKernel8.DataRecord, val );
+	}
+
+
 }

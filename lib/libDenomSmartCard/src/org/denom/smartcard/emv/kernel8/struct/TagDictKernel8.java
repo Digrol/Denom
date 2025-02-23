@@ -161,7 +161,7 @@ public class TagDictKernel8 implements ITagDictionary
 		add(     TagEmv.LanguagePreference,                   "Language Preference",                     Format.AN,    2,      8,  true ); // A.1.82
 		//                                                    "Last ERRD Response",                                                        // A.1.83
 		add(     TagEmv.LogEntry,                             "Log Entry",                               Format.B,     2,          true ); // A.1.84
-		add( TagKernel8.MaximumRRGracePeriod,                 "Maximum RR Grace Period",                 Format.B,     2,         false ); // A.1.85
+		add( TagKernel8.MaximumRRGracePeriod,                 "Maximum Relay Resistance Grace Period",   Format.B,     2,         false ); // A.1.85
 		//                                                    "Max Time For Processing RR APDU",                                           // A.1.86
 		//                                                    "Measured RR Processing Time",                                               // A.1.87
 		add(     TagEmv.MerchantCategoryCode,                 "Merchant Category Code",                  Format.N,     2,         false ); // A.1.88
@@ -171,7 +171,7 @@ public class TagDictKernel8 implements ITagDictionary
 		//                                                    "Message Identifier",                                                        // A.1.92
 		add( TagKernel8.MessageIdentifiersOnRestart,          "Message Identifiers On Restart",          Format.B,     0,     32, false ); // A.1.93
 		//                                                    "Message To Validate",                                                       // A.1.94
-		add( TagKernel8.MinimumRelayResistanceGracePeriod,    "Minimum Relay Resistance Grace Period",   Format.B,     2,         false ); // A.1.95
+		add( TagKernel8.MinimumRRGracePeriod,                 "Minimum Relay Resistance Grace Period",   Format.B,     2,         false ); // A.1.95
 		//                                                    "Min Time For Processing RR APDU",                                           // A.1.96
 		//                                                    "Next Cmd",                                                                  // A.1.97
 		add( TagKernel8.OutcomeParameterSet,                  "Outcome Parameter Set",                   Format.B,     8,         false ); // A.1.98
@@ -185,7 +185,7 @@ public class TagDictKernel8 implements ITagDictionary
 		add( TagKernel8.ReadDataStatus,                       "Read Data Status",                        Format.B,     1,         false ); // A.1.106
 		//                                                    "Read Data Tags To Validate Yet",                                            // A.1.107
 		//                                                    "Reference Control Parameter",                                               // A.1.108
-		add( TagKernel8.RR_AccuracyThreshold,                 "RR Accuracy Threshold",                   Format.B,     2,         false ); // A.1.109
+		add( TagKernel8.RR_AccuracyThreshold,                 "Relay Resistance Accuracy Threshold",     Format.B,     2,         false ); // A.1.109
 		add( TagKernel8.RR_TimeExcess,                        "RR Time Excess",                          Format.B,     2,         false ); // A.1.110
 		add( TagKernel8.RR_TransmissionTimeMismatchThreshold, "RR Transmission Time Mismatch Threshold", Format.B,     1,         false ); // A.1.111
 		add(     TagEmv.ResponseMessageTemplateFormat2,       "Response Message Template Format 2",      Format.B,     0,    253,  true ); // A.1.112

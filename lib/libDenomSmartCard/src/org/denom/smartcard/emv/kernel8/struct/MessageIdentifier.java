@@ -6,7 +6,7 @@ package org.denom.smartcard.emv.kernel8.struct;
 /**
  * EMV Сontactless Book C-8, Kernel 8 Specification v1.1, Annex A, A.1.92 Message Identifier.
  */
-public class DisplayMsgId
+public class MessageIdentifier
 {
 	public static final int CardReadOK             = 0x17;
 	public static final int TryAgain               = 0x21;
