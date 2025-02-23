@@ -34,9 +34,11 @@ public class OUT extends RuntimeException
 	/**
 	 * @param outcomeParameterSet - [8 байт] - поле value для TLV Outcome Parameter Set (tag 9F8210).
 	 */
-	public OUT( TlvDatabase tlvDB, Binary outcomeParameterSet, boolean createDataRecord, UIRD uird1, UIRD uird2 )
+	public OUT( TlvDatabase tlvDB, OutcomeParameterSet outcomeParameterSet, boolean createDataRecord, UIRD uird1, UIRD uird2 )
 	{
 		Binary b = Bin();
+
+		b.add( Tlv( TagKernel8.OutcomeParameterSet, outcomeParameterSet.bin ) );
 
 		b.add( tlvDB.createDiscretionaryData() );
 
@@ -56,7 +58,7 @@ public class OUT extends RuntimeException
 	/**
 	 * UIRD2 задаётся редко.
 	 */
-	public OUT( TlvDatabase tlvDB, Binary outcomeParameterSet, boolean createDataRecord, UIRD uird1 )
+	public OUT( TlvDatabase tlvDB, OutcomeParameterSet outcomeParameterSet, boolean createDataRecord, UIRD uird1 )
 	{
 		this( tlvDB, outcomeParameterSet, createDataRecord, uird1, null );
 	}

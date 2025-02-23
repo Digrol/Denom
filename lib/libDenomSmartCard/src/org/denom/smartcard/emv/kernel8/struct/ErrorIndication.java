@@ -43,7 +43,7 @@ public class ErrorIndication
 	public int L3 = L3_OK;
 
 	// -----------------------------------------------------------------------------------------------------------------
-	public int SW12 = 0; // [2 байта]
+	public int SW12 = 0x0000; // [2 байта]
 
 	/**
 	 * MessageIdentifier.*

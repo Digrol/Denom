@@ -38,8 +38,7 @@ public class TerminalKernel8
 
 	// -----------------------------------------------------------------------------------------------------------------
 	private final static int STATE_INIT        = 0x01;
-	private final static int STATE_SELECTED    = 0x02;
-	private final static int STATE_GPO_DONE    = 0x03;
+	private final static int STATE_GPO_DONE    = 0x02;
 	private final static int STATE_GEN_AC_DONE = 0x04;
 	private int sessionState;
 
@@ -53,7 +52,7 @@ public class TerminalKernel8
 	/**
 	 * [8 байт] - поле value для TLV Outcome Parameter Set (tag 9F8210).
 	 */
-	private Binary outcomeParameterSet = Bin( 8 );
+	private OutcomeParameterSet outcomeParameterSet = new OutcomeParameterSet();
 
 	private UIRD uird1 = new UIRD();
 
@@ -77,6 +76,8 @@ public class TerminalKernel8
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Задать параметры терминала и ядра.
+	 * Все обязательные теги из Table A.38 должны быть заданы здесь или в параметрах сессии,
+	 * иначе будет исключение при попытке выполнить транзакцию.
 	 */
 	public void setConfig( JSONObject jo )
 	{
@@ -116,9 +117,9 @@ public class TerminalKernel8
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private void checkParamPresent( TlvDatabase db, int tag )
+	private void checkParamPresent( int tag )
 	{
-		if( !db.IsPresent( tag ) )
+		if( !tlvDB.IsPresent( tag ) )
 			THROW( "Tag " + Binary.Num_Bin( tag, 0 ).Hex() + " (" + dict.find( tag ).name + ") is absent in POS terminal parameters" );
 	}
 
@@ -127,70 +128,81 @@ public class TerminalKernel8
 	 * Проверяем наличие обязательных параметров терминала.
 	 * Book C-8, A.3  Configuration Data Objects
 	 */
-	private void checkMandatoryParams( TlvDatabase db )
+	private void checkMandatoryParams()
 	{
-		checkParamPresent( db, TagEmv.AdditionalTerminalCapabilities );
-		checkParamPresent( db, TagEmv.ApplicationIdentifierTerminal );
-		checkParamPresent( db, TagEmv.ApplicationVersionNumberTerminal );
-		checkParamPresent( db, TagKernel8.CardDataInputCapability );
-		checkParamPresent( db, TagKernel8.CVMCapabilityCVMRequired );
-		checkParamPresent( db, TagKernel8.CVMCapabilityNoCVMRequired );
-		checkParamPresent( db, TagKernel8.DefaultIADMACOffset );
-		checkParamPresent( db, TagKernel8.DiscretionaryDataTagList );
-		checkParamPresent( db, TagKernel8.HoldTimeValue );
-		checkParamPresent( db, TagKernel8.KernelConfiguration );
-		checkParamPresent( db, TagKernel8.KernelReservedTVRMask );
-		checkParamPresent( db, TagKernel8.MaximumRRGracePeriod );
-		checkParamPresent( db, TagKernel8.MessageHoldTime );
-		checkParamPresent( db, TagKernel8.MessageIdentifiersOnRestart );
-		checkParamPresent( db, TagKernel8.MinimumRRGracePeriod );
-		checkParamPresent( db, TagKernel8.ReaderContactlessFloorLimit );
-		checkParamPresent( db, TagKernel8.ReaderCVMRequiredLimit );
-		checkParamPresent( db, TagKernel8.RR_AccuracyThreshold );
-		checkParamPresent( db, TagKernel8.RR_TransmissionTimeMismatchThreshold );
-		checkParamPresent( db, TagKernel8.SecurityCapability );
-		checkParamPresent( db, TagKernel8.TagMappingList );
-		checkParamPresent( db, TagKernel8.TerminalActionCodeDenial );
-		checkParamPresent( db, TagKernel8.TerminalActionCodeOnline );
-		checkParamPresent( db, TagEmv.TerminalCountryCode );
-		checkParamPresent( db, TagKernel8.TerminalExpectedTimeForRRCAPDU );
-		checkParamPresent( db, TagKernel8.TerminalExpectedTimeForRRRAPDU );
-		checkParamPresent( db, TagEmv.TerminalRiskManagementData );
-		checkParamPresent( db, TagEmv.TerminalType );
-		checkParamPresent( db, TagKernel8.TimeoutValue );
-		checkParamPresent( db, TagEmv.TransactionType );
+		checkParamPresent( TagEmv.AdditionalTerminalCapabilities );
+		checkParamPresent( TagEmv.ApplicationIdentifierTerminal );
+		checkParamPresent( TagEmv.ApplicationVersionNumberTerminal );
+		checkParamPresent( TagKernel8.CardDataInputCapability );
+		checkParamPresent( TagKernel8.CVMCapabilityCVMRequired );
+		checkParamPresent( TagKernel8.CVMCapabilityNoCVMRequired );
+		checkParamPresent( TagKernel8.DefaultIADMACOffset );
+		checkParamPresent( TagKernel8.DiscretionaryDataTagList );
+		checkParamPresent( TagKernel8.HoldTimeValue );
+		checkParamPresent( TagKernel8.KernelConfiguration );
+		checkParamPresent( TagKernel8.KernelReservedTVRMask );
+		checkParamPresent( TagKernel8.MaximumRRGracePeriod );
+		checkParamPresent( TagKernel8.MessageHoldTime );
+		checkParamPresent( TagKernel8.MessageIdentifiersOnRestart );
+		checkParamPresent( TagKernel8.MinimumRRGracePeriod );
+		checkParamPresent( TagKernel8.ReaderContactlessFloorLimit );
+		checkParamPresent( TagKernel8.ReaderCVMRequiredLimit );
+		checkParamPresent( TagKernel8.RR_AccuracyThreshold );
+		checkParamPresent( TagKernel8.RR_TransmissionTimeMismatchThreshold );
+		checkParamPresent( TagKernel8.SecurityCapability );
+		checkParamPresent( TagKernel8.TagMappingList );
+		checkParamPresent( TagKernel8.TerminalActionCodeDenial );
+		checkParamPresent( TagKernel8.TerminalActionCodeOnline );
+		checkParamPresent( TagEmv.TerminalCountryCode );
+		checkParamPresent( TagKernel8.TerminalExpectedTimeForRRCAPDU );
+		checkParamPresent( TagKernel8.TerminalExpectedTimeForRRRAPDU );
+		checkParamPresent( TagEmv.TerminalRiskManagementData );
+		checkParamPresent( TagEmv.TerminalType );
+		checkParamPresent( TagKernel8.TimeoutValue );
+		checkParamPresent( TagEmv.TransactionType );
 
-		checkParamPresent( db, TagKernel8.KernelQualifier );
+		checkParamPresent( TagKernel8.KernelQualifier );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private void resetSessionVars( TlvDatabase termParamsForSession )
+	/**
+	 * Outcome Parameter Set,  Discretionary Data.
+	 */
+	private OUT createOUT()
 	{
+		tlvDB.store( TagKernel8.ErrorIndication, errorIndication.toBin() );
+		return new OUT( tlvDB, outcomeParameterSet, false, null, null );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	private void kernel8Start( TlvDatabase termParamsForSession )
+	{
+		// KS.1
 		tlvDB = config.clone();
 		tlvDB.append( termParamsForSession );
 
+		// KS.2
+		outcomeParameterSet = new OutcomeParameterSet();
+		outcomeParameterSet.onInitKernel8();
+
 		uird1 = new UIRD();
+		uird1.holdTime = tlvDB.GetValue( TagKernel8.MessageHoldTime ).clone();
+
 		uird2 = new UIRD();
 
-		checkMandatoryParams( tlvDB );
+		errorIndication = new ErrorIndication();
+		errorIndication.msgOnError = MessageIdentifier.Error_OtherCard;
+
+		// KS.3, KS.4. Если необходимые теги не заданы в конфигурации и параметрах сессии, то исключение, а не OUT.
+		checkMandatoryParams();
+
 		sessionState = STATE_INIT;
+
+		log.writeln( "Kernel started" );
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
-	private void processFCI( Binary fci )
-	{
-		MUST( BerTLV.isTLV( fci ), "Not TLV in response on SELECT" );
-		BerTLV tlv = new BerTLV( fci );
-		MUST( tlv.tag == TagEmv.FCI, "Not FCI on Select" );
-
-		// Save whole FCI
-		tlvDB.store( tlv );
-		// And primitive tags in it
-		MUST( tlvDB.ParseAndStoreCardResponse( fci ), "Wrong FCI" );
-	}
-
-	// -----------------------------------------------------------------------------------------------------------------
-	private void selectApplication()
+	private Binary selectApplication()
 	{
 		Binary appAid = tlvDB.GetValue( TagEmv.ApplicationIdentifierTerminal );
 		
@@ -198,9 +210,41 @@ public class TerminalKernel8
 		MUST( cr.rapdu.isOk() || (cr.rapdu.sw1() == 0x62) || (cr.rapdu.sw1() == 0x63),
 			"Can't select card application, status: " + Num_Bin( cr.rapdu.status, 2 ).Hex() );
 
-		processFCI( cr.resp );
+		return cr.resp;
+	}
 
-		sessionState = STATE_SELECTED;
+	// -----------------------------------------------------------------------------------------------------------------
+	// 1.5
+	private boolean parseFCITemplate( Binary fci )
+	{
+		if( !BerTLV.isTLV( fci ) )
+			return false;
+
+		BerTLV tlv = new BerTLV( fci );
+		if( tlv.tag != TagEmv.FCI )
+			return false;
+
+		// Save whole FCI
+		tlvDB.store( tlv );
+
+		// And primitive tags in it
+		if( !tlvDB.ParseAndStoreCardResponse( fci ) )
+			return false;
+
+		return true;
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// 1.10
+	private void setLanguagePreference()
+	{
+		if( tlvDB.IsNotEmpty( TagEmv.LanguagePreference ) )
+		{
+			Binary langPref = tlvDB.GetValue( TagEmv.LanguagePreference );
+			langPref.resize( 8 );
+			uird1.languagePref = langPref;
+			uird2.languagePref = langPref.clone();
+		}
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -216,8 +260,45 @@ public class TerminalKernel8
 		OUT out = null;
 		try
 		{
-			resetSessionVars( termParamsForSession );
-			selectApplication();
+			kernel8Start( termParamsForSession );
+
+			// Вместо процесса S - выбираем приложение по AID из tlvDB, tag 'Application Identifier' 9F06
+			Binary fci = selectApplication();
+
+			// 1.5
+			boolean ok = parseFCITemplate( fci );
+			if( !ok )
+			{
+				// 1.7
+				errorIndication.L2 = ErrorIndication.L2_PARSING_ERROR;
+				errorIndication.msgOnError = MessageIdentifier.NA;
+			}
+
+			// 1.8
+			if( ok && !(tlvDB.IsNotEmpty( TagEmv.DFName ) && tlvDB.IsNotEmpty( TagKernel8.CardQualifier )
+					&& (tlvDB.GetValue( TagKernel8.CardQualifier ).get( 0 ) != 0 )) )
+			{
+				errorIndication.L2 = ErrorIndication.L2_CARD_DATA_MISSING;
+				errorIndication.msgOnError = MessageIdentifier.NA;
+				ok = false;
+			}
+
+			if( !ok )
+			{
+				// 1.14
+				outcomeParameterSet.setStatus( OutcomeParameterSet.STATUS_SELECT_NEXT );
+				outcomeParameterSet.setStart( OutcomeParameterSet.START_C );
+				return createOUT();
+			}
+
+			// 1.10
+			setLanguagePreference();
+
+			// 1.11
+			// IF ['Support for field off detection' in Card Qualifier is set]
+			if( (tlvDB.GetValue( TagKernel8.CardQualifier ).get( 4 ) & 0x80) != 0 )
+				outcomeParameterSet.setFieldOffRequest( tlvDB.GetValue( TagKernel8.HoldTimeValue ).get( 0 ) );
+
 		}
 		catch( OUT ex )
 		{
