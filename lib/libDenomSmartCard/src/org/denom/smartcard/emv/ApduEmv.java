@@ -74,8 +74,10 @@ public class ApduEmv
 	 */
 	public static CApdu GetProcessingOptions( final Binary pdolValues )
 	{
-		return new CApdu( 0x80, 0xA8, 0x00, 0x00, BerTLV.Tlv( TagEmv.CommandTemplate, pdolValues ), CApdu.MAX_NE,
+		CApdu ap = new CApdu( 0x80, 0xA8, 0x00, 0x00, BerTLV.Tlv( TagEmv.CommandTemplate, pdolValues ), CApdu.MAX_NE,
 			"{EMV} GET PROCESSING OPTIONS" );
+		ap.isTlvData = true;
+		return ap;
 	}
 	
 	// -----------------------------------------------------------------------------------------------------------------

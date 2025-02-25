@@ -13,7 +13,7 @@ public class MessageIdentifier
 	public static final int Approved               = 0x03;
 	public static final int Approved_Sign          = 0x1A;
 	public static final int Declined               = 0x07;
-	public static final int TryanotherInterface    = 0x18;
+	public static final int TryAnotherInterface    = 0x18;
 	public static final int Error_OtherCard        = 0x1C;
 	public static final int InsertCard             = 0x1D;
 	public static final int SeePhone               = 0x20;
@@ -31,11 +31,12 @@ public class MessageIdentifier
 			case Approved:               return "APPROVED";
 			case Approved_Sign:          return "APPROVED - SIGN";
 			case Declined:               return "DECLINED";
-			case TryanotherInterface:    return "TRY ANOTHER INTERFACE";
+			case TryAnotherInterface:    return "TRY ANOTHER INTERFACE";
 			case Error_OtherCard:        return "ERROR - OTHER CARD";
 			case InsertCard:             return "INSERT CARD";
 			case SeePhone:               return "SEE PHONE";
 			case Authorising_PleaseWait: return "AUTHORISING – PLEASE WAIT";
+			case ClearDisplay:           return "";
 			default:
 				return "N/A";
 		}

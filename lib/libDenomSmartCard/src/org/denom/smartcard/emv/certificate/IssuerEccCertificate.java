@@ -3,6 +3,7 @@
 
 package org.denom.smartcard.emv.certificate;
 
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -108,7 +109,7 @@ public class IssuerEccCertificate
 		this.issuerId = issuerId.clone();
 		asi = 0x10;
 
-		String hex = ZonedDateTime.now().plusYears( validYears ).format( DateTimeFormatter.ofPattern("yyyyMMdd") );
+		String hex = ZonedDateTime.now( ZoneOffset.UTC ).plusYears( validYears ).format( DateTimeFormatter.ofPattern("yyyyMMdd") );
 		expirationDate = Bin( hex );
 
 		serialNumber = serial.clone();
@@ -128,7 +129,7 @@ public class IssuerEccCertificate
 	 * Распарсить сертификат, разложить сериализованные данные по полям.
 	 * @return this
 	 */
-	public IssuerEccCertificate fromBin(  final Binary cert )
+	public IssuerEccCertificate fromBin( final Binary cert )
 	{
 		certFormat = cert.get( 0 );
 		certEncoding = cert.get( 1 );

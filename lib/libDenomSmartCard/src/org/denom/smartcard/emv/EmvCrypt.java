@@ -491,6 +491,9 @@ public class EmvCrypt
 	 */
 	public static Binary decryptReadData( AES aesSKc, AES aesSKi, Int CMC, final Binary crypt )
 	{
+		if( crypt.size() < 8 )
+			return null;
+
 		Binary cardMac = crypt.last( 8 );
 		Binary encryptedTLV = crypt.first( crypt.size() - 8 );
 

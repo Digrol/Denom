@@ -208,6 +208,16 @@ public class TlvDatabase
 
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
+	 * Возвращает ссылку на value в базе для изменения значения.
+	 * null - если объекта нет в базе.
+	 */
+	public Binary GetRef( int tag )
+	{
+		return db.get( tag );
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+	/**
 	 * Парсим ответ от карты и помещаем все найденные примитивные теги в БД, если тег нам известен,
 	 * не задан ранее и карта имеет право его задавать.
 	 * Более детально - см. спецификацию или тело метода.
@@ -218,10 +228,9 @@ public class TlvDatabase
 		if( !BerTLV.isTLV( tlvsBin ) )
 			return false;
 		BerTLV tlvMain = new BerTLV( tlvsBin );
-		if( !tlvMain.isConstructed() )
-			return false;
-
-		ArrayList<BerTLV> recs = new BerTLVList( tlvMain.value ).recs;
+		
+		ArrayList<BerTLV> recs = new Arr<>();
+		recs.add( tlvMain );
 
 		for( int i = 0; i < recs.size(); ++i )
 		{

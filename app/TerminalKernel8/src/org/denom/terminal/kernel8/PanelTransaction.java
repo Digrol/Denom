@@ -5,6 +5,8 @@ package org.denom.terminal.kernel8;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.util.Random;
+
 import javax.swing.*;
 
 import org.denom.Binary;
@@ -104,7 +106,7 @@ class PanelTransaction extends JPanel
 			s = Strings.PadLeft( s, 12, '0' );
 			Binary amount = Bin( s );
 			
-			TerminalK8 term = new TerminalK8( main.cr, aid, new ECAlg( new Secp256r1() ) );
+			TerminalK8 term = new TerminalK8( main.cr, aid, new ECAlg( new Secp256r1(), new Random( System.nanoTime() ) ) );
 			term.addCAPublicKey( caPKIndex, caPublicKey );
 			term.select();
 			term.getProcessingOptions();

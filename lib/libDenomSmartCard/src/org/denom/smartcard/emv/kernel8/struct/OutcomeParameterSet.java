@@ -78,6 +78,11 @@ public class OutcomeParameterSet
 		bin.set( 3, cvm );
 	}
 
+	public int getCVM()
+	{
+		return bin.get( 3 );
+	}
+
 	// -----------------------------------------------------------------------------------------------------------------
 	/**
 	 * Номера битов в байте. От 0 до 7
@@ -86,7 +91,7 @@ public class OutcomeParameterSet
 	public static final int BIT_UI_REQUEST_ON_RESTART = 6; // 0x40
 	public static final int BIT_DATA_RECORD           = 5; // 0x20
 	public static final int BIT_DISCRETIONARY_DATA    = 4; // 0x10
-	public static final int BIT_RECIEPT               = 3; // 0x08
+	public static final int BIT_RECEIPT               = 3; // 0x08
 
 	/**
 	 * Задать бит в b5.

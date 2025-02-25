@@ -50,7 +50,7 @@ public class TerminalK8
 	/**
 	 * Параметры терминала
 	 */
-	public Binary kernelQualifier = Bin( "00 00 00 00 00 00 00 00" );
+	public Binary kernelQualifier = Bin( "02 80 00 10 FF FF 00 00" );
 
 	// -----------------------------------------------------------------------------------------------------------------
 	public Session sess;
@@ -58,33 +58,23 @@ public class TerminalK8
 	{
 		public TlvDatabase tlvDB;
 
-		/**
-		 * Kernel Message Counter
-		 */
+		// Kernel Message Counter
 		public Int KMC = new Int(0);
 
-		/**
-		 * Card Message Counter
-		 */
+		// Card Message Counter
 		public Int CMC = new Int(0);
 
-		/**
-		 * Terminal ephimeral key pair.
-		 */
+		// Terminal ephimeral key pair.
 		public ECAlg ecDk;
 
-		/**
-		 * Card public key
-		 */
+		// Card public key
 		public ECAlg ecQc;
 
 		public Binary inputForIADMAC;
 		public Binary inputForAC;
 		public Binary IadMac;
 
-		/**
-		 * Blinded card public key
-		 */
+		// Blinded card public key
 		public Binary Pc;
 
 		public AES aesSKc;
@@ -94,10 +84,7 @@ public class TerminalK8
 
 		public Binary sdaRecords = Bin();
 
-		public Binary deviceRREntropy;
-		public Binary minTimeForProcessingRRApdu;
-		public Binary maxTimeForProcessingRRApdu;
-		public Binary deviceEstimatedTransmissionTimeForRRRapdu;
+		public Binary lastERRDResponse;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
@@ -129,6 +116,8 @@ public class TerminalK8
 		sess.rRecovered = Bin();
 		sess.sdaRecords = Bin();
 
+		sess.lastERRDResponse = null;
+		
 		sess.inputForIADMAC = Bin();
 		sess.inputForAC = Bin();
 		sess.IadMac = Bin();
@@ -270,10 +259,7 @@ public class TerminalK8
 		BerTLV tlv = new BerTLV( cr.resp );
 		MUST( (tlv.tag == 0x80) && (tlv.value.size() == 10), "Wrong response on ExchangeRelayResistanceData" );
 
-		sess.deviceRREntropy = tlv.value.first( 4 );
-		sess.minTimeForProcessingRRApdu = tlv.value.slice( 4, 2 );
-		sess.maxTimeForProcessingRRApdu = tlv.value.slice( 6, 2 );
-		sess.deviceEstimatedTransmissionTimeForRRRapdu = tlv.value.slice( 8, 2 );
+		sess.lastERRDResponse = tlv.value;
 
 		return tlv.value;
 	}
@@ -336,9 +322,9 @@ public class TerminalK8
 	{
 		Binary res = Bin();
 
-		if( sess.tlvDB.IsEmpty( TagKernel8.ExtendedSDATagList ) )
+		if( !sess.tlvDB.IsNotEmpty( TagKernel8.ExtendedSDATagList ) )
 			return res;
-		
+
 		Binary extTagList = sess.tlvDB.GetValue( TagKernel8.ExtendedSDATagList );
 		Arr<Integer> tags = BerTLV.parseTagList( extTagList );
 		for( int tag : tags )
@@ -365,7 +351,7 @@ public class TerminalK8
 		ecAlg.setPublic( caKey );
 
 		Binary cert = sess.tlvDB.GetValue( TagEmv.IssuerPublicKeyCertificate );
-		MUST( b != null, "Issuer Public Key Cert absent on card" );
+		MUST( cert != null, "Issuer Public Key Cert absent on card" );
 		IssuerEccCertificate issuerCert = new IssuerEccCertificate().fromBin( cert );
 		MUST( issuerCert.verifySignature( ecAlg ), "Wrong signature in Issuer ECC Certificate" );
 
@@ -384,7 +370,7 @@ public class TerminalK8
 		MUST( iccCert.iccdHash.equals( myHash ), "Wrong ICCD Hash" );
 
 		// Validate r
-		sess.ecQc.setPublic( Bin("02").add( iccCert.iccPublicKeyX) );
+		sess.ecQc.setPublic( Bin("02").add( iccCert.iccPublicKeyX ) );
 		MUST( EmvCrypt.BDHValidate( sess.ecQc, sess.rRecovered, sess.Pc ), "BDH failed: wrong r" );
 	}
 
@@ -405,13 +391,10 @@ public class TerminalK8
 		MUST( tlv77.tag == TagEmv.ResponseMessageTemplateFormat2, "Wrong Tag in GENERATE AC Response" );
 		MUST( sess.tlvDB.ParseAndStoreCardResponse( cr.resp ), "Wrong GENERATE AC Response" );
 
-		if( sess.deviceRREntropy != null )
+		if( sess.lastERRDResponse != null )
 		{
 			sess.inputForIADMAC.add( sess.tlvDB.GetValue( TagEmv.UnpredictableNumber ) );
-			sess.inputForIADMAC.add( sess.deviceRREntropy );
-			sess.inputForIADMAC.add( sess.minTimeForProcessingRRApdu );
-			sess.inputForIADMAC.add( sess.maxTimeForProcessingRRApdu );
-			sess.inputForIADMAC.add( sess.deviceEstimatedTransmissionTimeForRRRapdu );
+			sess.inputForIADMAC.add( sess.lastERRDResponse );
 		}
 
 		// Skip TLVs - AC and EDA-MAC

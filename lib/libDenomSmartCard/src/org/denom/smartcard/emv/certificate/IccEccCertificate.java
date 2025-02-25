@@ -3,6 +3,7 @@
 
 package org.denom.smartcard.emv.certificate;
 
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -112,7 +113,7 @@ public class IccEccCertificate
 		certEncoding = 0x00;
 		asi = 0x00;
 
-		String hex = ZonedDateTime.now().plusYears( validYears ).format( DateTimeFormatter.ofPattern("yyyyMMdd") );
+		String hex = ZonedDateTime.now( ZoneOffset.UTC ).plusYears( validYears ).format( DateTimeFormatter.ofPattern("yyyyMMdd") );
 		expirationDate = Bin( hex );
 		expirationTime = Bin("23 59");
 
